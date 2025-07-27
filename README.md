@@ -2,6 +2,12 @@
 
 一个基于 Electron 的企业级桌面应用程序，用于自动生成云桌面 LLD（Low Level Design）规划文档。
 
+## 📥 快速下载
+
+[![Download Latest Release](https://img.shields.io/badge/下载最新版本-v1.0.1-blue?style=for-the-badge&logo=download)](https://github.com/Roverlo/LLD/releases/latest)
+
+**🎯 一键下载，即开即用！** 无需安装Node.js、无需配置环境，下载后双击即可运行。
+
 ## 🎯 项目概述
 
 ### 核心功能
@@ -79,16 +85,40 @@ ZTEuSmartViewLLD/
 
 ## 🚀 快速开始
 
-### 开发环境要求
+### 方式一：直接使用（推荐给普通用户）
+
+#### 选项A：下载Release版本（推荐）
+1. 访问 [GitHub Releases](https://github.com/Roverlo/LLD/releases)
+2. 下载最新版本的 `ZTEuSmartViewLLD 1.0.1.exe` (64MB)
+3. 双击运行即可使用（绿色免安装版）
+
+#### 选项B：克隆项目使用预编译版本
+```bash
+# 1. 下载项目
+git clone https://github.com/Roverlo/LLD.git
+cd LLD
+
+# 2. 使用预编译版本（无需安装依赖）
+# 方式2a: 运行绿色版（推荐）
+# 双击 dist/ZTEuSmartViewLLD 1.0.1.exe
+
+# 方式2b: 运行解压版
+# 进入 dist/win-unpacked/ 目录
+# 双击运行 ZTEuSmartViewLLD.exe
+```
+
+### 方式二：开发环境运行
+
+#### 环境要求
 - Node.js 16.0+
 - Yarn 1.22+
 - Windows 7/8/10/11 (64位)
 
-### 安装与运行
+#### 安装与运行
 ```bash
 # 1. 克隆项目
-git clone <repository-url>
-cd ZTEuSmartViewLLD
+git clone https://github.com/Roverlo/LLD.git
+cd LLD
 
 # 2. 安装依赖
 yarn install
@@ -115,8 +145,17 @@ yarn dist
 yarn dist
 
 # 生成的文件位于 dist/ 目录
-# ZTEuSmartViewLLD 1.0.0.exe - 绿色免安装版
+# ZTEuSmartViewLLD 1.0.1.exe - 绿色免安装版 (64MB)
+# win-unpacked/ - 解压版本 (~200MB)
 ```
+
+### 📦 下载选项
+
+| 下载方式 | 文件大小 | 适用人群 | 说明 |
+|----------|----------|----------|------|
+| **Release版本** | 64MB | 普通用户 | 从GitHub Releases直接下载exe |
+| **完整项目** | ~400MB | 开发者 | 包含源码、依赖、构建文件 |
+| **解压版** | ~200MB | 高级用户 | win-unpacked目录，可查看文件结构 |
 
 ## 📋 功能特性
 
@@ -150,12 +189,20 @@ yarn dist
 
 ## 📖 使用说明
 
+### 🚀 快速上手
+1. **获取应用**：
+   - **推荐**：从 [GitHub Releases](https://github.com/Roverlo/LLD/releases) 下载最新版本
+   - **备选**：克隆项目后使用 `dist/ZTEuSmartViewLLD 1.0.1.exe`
+
+2. **启动应用**：
+   - 双击 `ZTEuSmartViewLLD 1.0.1.exe` 文件
+   - 无需安装，绿色软件，即开即用
+
 ### 基本操作
-1. **启动应用**：双击exe文件或运行yarn start
-2. **配置参数**：填写用户数量、场景选择、服务器配置
-3. **设置IP段**：配置各网络的IP地址范围
-4. **生成文档**：点击"生成Excel"按钮
-5. **查看结果**：Excel文件自动保存到下载目录
+1. **配置参数**：填写用户数量、场景选择、服务器配置
+2. **设置IP段**：配置各网络的IP地址范围
+3. **生成文档**：点击"生成Excel"按钮
+4. **查看结果**：Excel文件自动保存到下载目录
 
 ### IP配置示例
 ```
