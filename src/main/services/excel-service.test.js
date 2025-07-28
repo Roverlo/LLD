@@ -2,19 +2,19 @@
  * Excel服务测试
  */
 
-const { generateIpStatusDescription } = require('./excel-service');
+const { generateIpStatusDescription, formatIpRangeDisplay } = require('./excel-service');
 
 describe('Excel Service', () => {
     describe('generateIpStatusDescription', () => {
-        test('should return "待提供" when no IP pool provided', () => {
+        test('should return unified format when no IP pool provided', () => {
             const result = generateIpStatusDescription(10, null);
-            expect(result).toBe('待提供，共需10个');
+            expect(result).toBe('共需10个IP，已提供0个IP，待提供10个IP');
         });
 
-        test('should return "待提供" when IP pool is empty', () => {
+        test('should return unified format when IP pool is empty', () => {
             const usage = { total: 0, used: 0, remaining: 0 };
             const result = generateIpStatusDescription(5, usage);
-            expect(result).toBe('待提供，共需5个');
+            expect(result).toBe('共需5个IP，已提供0个IP，待提供5个IP');
         });
 
         test('should return "IP充足" when provided IPs are sufficient', () => {
@@ -45,6 +45,41 @@ describe('Excel Service', () => {
             const usage = { total: 100, used: 50, remaining: 50 };
             const result = generateIpStatusDescription(150, usage);
             expect(result).toBe('共需150个IP，已提供100个IP，待提供50个IP');
+        });
+    });
+
+    describe('formatIpRangeDisplay', () => {
+        test('should return "待提供" for empty or null input', () => {
+            expect(formatIpRangeDisplay('')).toBe('待提供');
+            expect(formatIpRangeDisplay(null)).toBe('待提供');
+            expect(formatIpRangeDisplay(undefined)).toBe('待提供');
+            expect(formatIpRangeDisplay('   ')).toBe('待提供');
+        });
+
+        test('should normalize spaces', () => {
+            const result = formatIpRangeDisplay('192.168.1.1-192.168.1.10   192.168.2.1-192.168.2.5');
+            expect(result).toBe('192.168.1.1-192.168.1.10 192.168.2.1-192.168.2.5');
+        });
+
+        test('should convert Chinese punctuation to English', () => {
+            const result = formatIpRangeDisplay('192.168.1.1-10，192.168.2.1-5；192.168.3.1/24');
+            expect(result).toBe('192.168.1.1-10, 192.168.2.1-5; 192.168.3.1/24');
+        });
+
+        test('should standardize comma and semicolon spacing', () => {
+            const result = formatIpRangeDisplay('192.168.1.1-10,192.168.2.1-5;192.168.3.1/24');
+            expect(result).toBe('192.168.1.1-10, 192.168.2.1-5; 192.168.3.1/24');
+        });
+
+        test('should handle complex mixed format', () => {
+            const input = '192.168.1.1-10，  192.168.2.1-5 ；192.168.3.1/24    192.168.4.1-192.168.4.20';
+            const expected = '192.168.1.1-10, 192.168.2.1-5; 192.168.3.1/24 192.168.4.1-192.168.4.20';
+            expect(formatIpRangeDisplay(input)).toBe(expected);
+        });
+
+        test('should preserve valid format', () => {
+            const input = '192.168.1.1-192.168.1.10, 192.168.2.1/24; 10.0.0.1-10.0.0.50';
+            expect(formatIpRangeDisplay(input)).toBe(input);
         });
     });
 });

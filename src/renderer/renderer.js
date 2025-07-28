@@ -862,8 +862,9 @@ const DesktopVmManager = {
      * @param {string} type - 虚机类型
      */
     removeVmType(type) {
-        // 不允许删除A、B、C类型
-        if (['A', 'B', 'C'].includes(type)) {
+        // 只保留A类型不能删除，B、C类型现在可以删除
+        if (type === 'A') {
+            alert('虚机类型A不能删除');
             return;
         }
 
@@ -875,13 +876,14 @@ const DesktopVmManager = {
     },
 
     /**
-     * 为现有类型添加删除按钮（除了A、B、C）
+     * 为现有类型添加删除按钮（除了A）
      */
     addRemoveButtons() {
         const vmTypes = document.querySelectorAll('.desktop-vm-type');
         vmTypes.forEach((vmType) => {
             const type = vmType.dataset.type;
-            if (!['A', 'B', 'C'].includes(type)) {
+            // 只有A类型不添加删除按钮，B、C类型现在可以删除
+            if (type !== 'A') {
                 const vmTypeRow = vmType.querySelector('.vm-type-row');
                 if (vmTypeRow && !vmTypeRow.querySelector('.remove-vm-type-btn')) {
                     const removeBtn = document.createElement('button');

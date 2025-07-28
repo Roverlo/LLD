@@ -103,12 +103,8 @@ const applyWorksheetStyles = (worksheet, headerRow, maxColumns) => {
  * @returns {string} IP状态描述
  */
 const generateIpStatusDescription = (required, usage) => {
-    if (!usage || usage.total === 0) {
-        // 没有提供IP池
-        return `待提供，共需${required}个`;
-    }
+    const provided = usage?.total || 0;
 
-    const provided = usage.total;
     if (provided >= required) {
         // IP充足
         return `共需${required}个IP，已提供${provided}个IP，IP充足`;
@@ -119,7 +115,26 @@ const generateIpStatusDescription = (required, usage) => {
     }
 };
 
-const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUsage = null) => {
+/**
+ * 格式化IP段显示
+ * @param {string} ipRange - 原始IP段字符串
+ * @returns {string} 格式化后的IP段
+ */
+const formatIpRangeDisplay = (ipRange) => {
+    if (!ipRange || ipRange.trim() === '') {
+        return '待提供';
+    }
+
+    // 统一格式：去掉多余空格，标准化分隔符
+    return ipRange.trim()
+        .replace(/\s+/g, ' ')  // 多个空格替换为单个空格
+        .replace(/，/g, ',')   // 中文逗号替换为英文逗号
+        .replace(/；/g, ';')   // 中文分号替换为英文分号
+        .replace(/\s*,\s*/g, ', ')  // 逗号前后统一空格
+        .replace(/\s*;\s*/g, '; '); // 分号前后统一空格
+};
+
+const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUsage = null, ipRanges = null) => {
     const worksheet = workbook.addWorksheet('IP总体规划');
 
     // 统计各类IP数量
@@ -160,40 +175,46 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
     const pubIpDescription = generateIpStatusDescription(ipStats.pubIpCount, ipUsage?.storagePublic);
     const cluIpDescription = generateIpStatusDescription(ipStats.cluIpCount, ipUsage?.storageCluster);
 
-    // 设置表格结构
+    // 格式化IP段显示
+    const mngIpRange = formatIpRangeDisplay(ipRanges?.mngIpRange);
+    const bizIpRange = formatIpRangeDisplay(ipRanges?.bizIpRange);
+    const pubIpRange = formatIpRangeDisplay(ipRanges?.pubIpRange);
+    const cluIpRange = formatIpRangeDisplay(ipRanges?.cluIpRange);
+
+    // 设置表格结构（添加IP段列）
     const data = [
-        ['IP整体规划', 'IP需求', '', 'VLAN', '', '备注'],
+        ['IP整体规划', 'IP需求', 'IP段', 'VLAN', '', '备注'],
         [
             '',
             '管理网IP',
             mngIpDescription,
+            mngIpRange,
             'VLAN',
-            '待提供',
             '管理网：\n1.负责云桌面管理节点与计算节点，CEPH 管理节点与存储节点之间的通信',
         ],
-        ['', '业务网IP', bizIpDescription, 'VLAN', '待提供', '业务网：\n1.云桌面虚拟机通信网络；'],
+        ['', '业务网IP', bizIpDescription, bizIpRange, 'VLAN', '业务网：\n1.云桌面虚拟机通信网络；'],
         [
             '',
             '物理机存储公共网IP',
             pubIpDescription,
+            pubIpRange,
             'VLAN',
-            '待提供',
             '存储公共网：\n1.属于存储网络，负责客户端与CEPH 存储集群、MON 与 MON 间、MON 与 OSD 间的通信；',
         ],
         [
             '',
             '物理机存储集群网IP',
             cluIpDescription,
+            cluIpRange,
             'VLAN',
-            '待提供',
             '存储集群网：\n1.属于存储网络，负责集群网络 OSD 间通信；',
         ],
-        ['', '桌面虚机IP', desktopIpDescription, '', '', ''],
+        ['', '桌面虚机IP', desktopIpDescription, '待提供', '', ''],
     ];
 
     // 动态添加网段行
     for (let i = 1; i <= Math.max(segmentCount, 1); i++) {
-        data.push(['', '', `待提供网段${i}`, 'VLAN', '待提供', '']);
+        data.push(['', '', `待提供网段${i}`, '待提供', 'VLAN', '']);
     }
 
     // 添加数据行
@@ -676,7 +697,13 @@ const generateExcelFile = async (plan, mainWindow) => {
         workbook.created = new Date();
 
         // 创建工作表（IP总体规划放在最前面）
-        createIpPlanWorksheet(workbook, plan.servers, plan.vms, plan.desktopVmTypes, plan.summary?.ipUsage);
+        const ipRanges = {
+            mngIpRange: plan.params?.mngIpRange,
+            bizIpRange: plan.params?.bizIpRange,
+            pubIpRange: plan.params?.pubIpRange,
+            cluIpRange: plan.params?.cluIpRange,
+        };
+        createIpPlanWorksheet(workbook, plan.servers, plan.vms, plan.desktopVmTypes, plan.summary?.ipUsage, ipRanges);
         createServerWorksheet(workbook, plan.servers);
         createVmWorksheet(workbook, plan.vms);
         createStorageWorksheet(workbook, plan.metadata.parameters); // 传递参数而不是storagePlan
@@ -735,5 +762,6 @@ module.exports = {
     createVmWorksheet,
     createStorageWorksheet,
     generateIpStatusDescription, // 导出用于测试
+    formatIpRangeDisplay, // 导出用于测试
     EXCEL_STYLES,
 };
