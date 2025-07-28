@@ -123,7 +123,7 @@ function createMenu(mainWindow) {
                     type: 'info',
                     title: '特别鸣谢',
                     message: '感谢内测团队的大力支持！',
-                    detail: '特别感谢以下同事在内测过程中提供的宝贵帮助和建议：\n\n内测团队成员（按姓氏首字母排序）：\n• 同事A\n• 同事B\n• 同事C\n• 同事D\n• 同事E\n• 同事F\n\n感谢大家在功能测试、用户体验优化、错误反馈等方面的大力支持！\n\n——ZTE uSmartView LLD Generator 开发团队',
+                    detail: '特别感谢以下同事在内测过程中提供的宝贵帮助和建议：\n\n内测团队成员（按姓氏首字母排序）：\n• 杨帅6000021393\n• 同事B\n• 同事C\n• 同事D\n• 同事E\n• 同事F\n\n感谢大家在功能测试、用户体验优化、错误反馈等方面的大力支持！\n\n——ZTE uSmartView LLD Generator 开发团队',
                     buttons: [],
                     noLink: true,
                     textWidth: 400,

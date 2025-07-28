@@ -188,7 +188,7 @@ describe('Parameter Validator', () => {
     });
 
     describe('validateIpRanges', () => {
-        test('should validate required IP ranges', () => {
+        test('should allow empty IP ranges for IP requirement calculation', () => {
             const params = {
                 mngIpRange: '',
                 bizIpRange: '',
@@ -198,10 +198,8 @@ describe('Parameter Validator', () => {
             };
 
             const alerts = validateIpRanges(params);
-            expect(alerts).toContain('管理网IP段不能为空。');
-            expect(alerts).toContain('网络隔离模式下，业务网IP段不能为空。');
-            expect(alerts).toContain('存储公共网IP段不能为空。');
-            expect(alerts).toContain('存储集群网IP段不能为空。');
+            // 新设计：允许用户不填IP段来计算IP需求
+            expect(alerts).toEqual([]);
         });
 
         test('should not require business IP in combined mode', () => {
@@ -215,6 +213,34 @@ describe('Parameter Validator', () => {
 
             const alerts = validateIpRanges(params);
             expect(alerts).not.toContain('网络隔离模式下，业务网IP段不能为空。');
+        });
+
+        test('should allow partial IP configuration for requirement calculation', () => {
+            const params = {
+                mngIpRange: '192.168.1.0/24',
+                bizIpRange: '',
+                pubIpRange: '',
+                cluIpRange: '',
+                isNetCombined: false,
+            };
+
+            const alerts = validateIpRanges(params);
+            // 新设计：允许部分IP配置，用于逐步规划
+            expect(alerts).toEqual([]);
+        });
+
+        test('should handle completely empty IP configuration', () => {
+            const params = {
+                mngIpRange: '',
+                bizIpRange: '',
+                pubIpRange: '',
+                cluIpRange: '',
+                isNetCombined: true,
+            };
+
+            const alerts = validateIpRanges(params);
+            // 新设计：允许完全空的IP配置，用于计算IP需求
+            expect(alerts).toEqual([]);
         });
     });
 

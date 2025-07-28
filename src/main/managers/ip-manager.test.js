@@ -33,9 +33,11 @@ describe('IpManager', () => {
             expect(combinedManager.ipPools.business.length).toBe(0);
         });
 
-        test('should throw error for invalid IP ranges', () => {
-            const invalidParams = { ...testParams, mngIpRange: '' };
-            expect(() => new IpManager(invalidParams)).toThrow();
+        test('should handle empty IP ranges gracefully', () => {
+            const emptyParams = { ...testParams, mngIpRange: '' };
+            expect(() => new IpManager(emptyParams)).not.toThrow();
+            const ipManager = new IpManager(emptyParams);
+            expect(ipManager).toBeDefined();
         });
     });
 
@@ -64,19 +66,19 @@ describe('IpManager', () => {
             expect(vmIp).toBe('192.168.1.2'); // 共享计数器，所以是下一个IP
         });
 
-        test('should return IP_INSUFFICIENT_TEXT when pool exhausted', () => {
+        test('should return IP_TO_BE_PROVIDED_TEXT when pool exhausted', () => {
             // Exhaust the pool
             for (let i = 0; i < 15; i++) {
                 ipManager.getNextIp('management', 'server');
             }
 
             const result = ipManager.getNextIp('management', 'server');
-            expect(result).toBe('（IP不足）');
+            expect(result).toBe('待提供IP');
         });
 
-        test('should return IP_INSUFFICIENT_TEXT for invalid network type', () => {
+        test('should return IP_TO_BE_PROVIDED_TEXT for invalid network type', () => {
             const result = ipManager.getNextIp('invalid', 'server');
-            expect(result).toBe('（IP不足）');
+            expect(result).toBe('待提供IP');
         });
     });
 
@@ -187,7 +189,7 @@ describe('IpManager', () => {
         test('should handle allocation beyond pool size', () => {
             const ips = ipManager.allocateIps('management', 15, 'server');
             expect(ips.length).toBe(15);
-            expect(ips.slice(-5)).toEqual(['（IP不足）', '（IP不足）', '（IP不足）', '（IP不足）', '（IP不足）']);
+            expect(ips.slice(-5)).toEqual(['待提供IP', '待提供IP', '待提供IP', '待提供IP', '待提供IP']);
         });
     });
 
@@ -245,7 +247,7 @@ describe('IpManager', () => {
             expect(() => new IpManager(emptyParams)).not.toThrow();
         });
 
-        test('should handle malformed IP ranges', () => {
+        test('should handle malformed IP ranges gracefully', () => {
             const malformedParams = {
                 isNetCombined: true,
                 mngIpRange: 'invalid-range',
@@ -254,7 +256,60 @@ describe('IpManager', () => {
                 cluIpRange: '172.17.0.1/24',
             };
 
-            expect(() => new IpManager(malformedParams)).toThrow();
+            expect(() => new IpManager(malformedParams)).not.toThrow();
+            const ipManager = new IpManager(malformedParams);
+            // 应该返回"待提供IP"因为IP范围无效
+            expect(ipManager.getNextIp('management', 'server')).toBe('待提供IP');
+        });
+
+        test('should handle completely empty IP configuration for requirement calculation', () => {
+            const emptyParams = {
+                isNetCombined: true,
+                mngIpRange: '',
+                bizIpRange: '',
+                pubIpRange: '',
+                cluIpRange: '',
+            };
+
+            const ipManager = new IpManager(emptyParams);
+
+            // 获取多个IP，应该都返回"待提供IP"
+            const ip1 = ipManager.getNextIp('management', 'server');
+            const ip2 = ipManager.getNextIp('management', 'server');
+            const ip3 = ipManager.getNextIp('business', 'server');
+
+            expect(ip1).toBe('待提供IP');
+            expect(ip2).toBe('待提供IP');
+            expect(ip3).toBe('待提供IP');
+
+            // 但是计数器应该正常工作，用于计算IP需求
+            const usage = ipManager.getAllIpUsage();
+            expect(usage.management.used).toBe(2);
+            expect(usage.business.used).toBe(1);
+        });
+
+        test('should support mixed configuration (some IPs provided, some empty)', () => {
+            const mixedParams = {
+                isNetCombined: false,
+                mngIpRange: '192.168.1.1-192.168.1.10',
+                bizIpRange: '', // 空的，应该返回"待提供IP"
+                pubIpRange: '172.16.0.1-172.16.0.5',
+                cluIpRange: '', // 空的，应该返回"待提供IP"
+            };
+
+            const ipManager = new IpManager(mixedParams);
+
+            // 管理网有IP池，应该返回实际IP
+            expect(ipManager.getNextIp('management', 'server')).toBe('192.168.1.1');
+
+            // 业务网没有IP池，应该返回"待提供IP"
+            expect(ipManager.getNextIp('business', 'server')).toBe('待提供IP');
+
+            // 存储公共网有IP池，应该返回实际IP
+            expect(ipManager.getNextIp('storagePublic', 'server')).toBe('172.16.0.1');
+
+            // 存储集群网没有IP池，应该返回"待提供IP"
+            expect(ipManager.getNextIp('storageCluster', 'server')).toBe('待提供IP');
         });
     });
 });

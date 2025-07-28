@@ -94,8 +94,32 @@ const applyWorksheetStyles = (worksheet, headerRow, maxColumns) => {
  * @param {Object[]} servers - 服务器列表
  * @param {Object[]} vms - 虚机列表
  * @param {Object[]} desktopVmTypes - 桌面虚机类型配置
+ * @param {Object} ipUsage - IP使用情况统计
  */
-const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = []) => {
+/**
+ * 生成IP状态描述
+ * @param {number} required - 需要的IP数量
+ * @param {Object} usage - IP使用情况 {total, used, remaining}
+ * @returns {string} IP状态描述
+ */
+const generateIpStatusDescription = (required, usage) => {
+    if (!usage || usage.total === 0) {
+        // 没有提供IP池
+        return `待提供，共需${required}个`;
+    }
+
+    const provided = usage.total;
+    if (provided >= required) {
+        // IP充足
+        return `共需${required}个IP，已提供${provided}个IP，IP充足`;
+    } else {
+        // IP不足
+        const shortage = required - provided;
+        return `共需${required}个IP，已提供${provided}个IP，待提供${shortage}个IP`;
+    }
+};
+
+const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUsage = null) => {
     const worksheet = workbook.addWorksheet('IP总体规划');
 
     // 统计各类IP数量
@@ -130,22 +154,28 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = []) => {
     const segmentCount = Math.ceil(totalDesktopVms / 230); // 每个网段230个IP
     const desktopIpDescription = `待提供，共需${totalDesktopVms}个，即${segmentCount}个网段（每个段预留前10个及后15个IP，可用IP按230个计算）`;
 
+    // 生成IP状态描述
+    const mngIpDescription = generateIpStatusDescription(ipStats.mngIpCount, ipUsage?.management);
+    const bizIpDescription = generateIpStatusDescription(ipStats.bizIpCount, ipUsage?.business);
+    const pubIpDescription = generateIpStatusDescription(ipStats.pubIpCount, ipUsage?.storagePublic);
+    const cluIpDescription = generateIpStatusDescription(ipStats.cluIpCount, ipUsage?.storageCluster);
+
     // 设置表格结构
     const data = [
         ['IP整体规划', 'IP需求', '', 'VLAN', '', '备注'],
         [
             '',
             '管理网IP',
-            `待提供，共需${ipStats.mngIpCount}个`,
+            mngIpDescription,
             'VLAN',
             '待提供',
             '管理网：\n1.负责云桌面管理节点与计算节点，CEPH 管理节点与存储节点之间的通信',
         ],
-        ['', '业务网IP', `待提供，共需${ipStats.bizIpCount}个`, 'VLAN', '待提供', '业务网：\n1.云桌面虚拟机通信网络；'],
+        ['', '业务网IP', bizIpDescription, 'VLAN', '待提供', '业务网：\n1.云桌面虚拟机通信网络；'],
         [
             '',
             '物理机存储公共网IP',
-            `待提供，共需${ipStats.pubIpCount}个`,
+            pubIpDescription,
             'VLAN',
             '待提供',
             '存储公共网：\n1.属于存储网络，负责客户端与CEPH 存储集群、MON 与 MON 间、MON 与 OSD 间的通信；',
@@ -153,7 +183,7 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = []) => {
         [
             '',
             '物理机存储集群网IP',
-            `待提供，共需${ipStats.cluIpCount}个`,
+            cluIpDescription,
             'VLAN',
             '待提供',
             '存储集群网：\n1.属于存储网络，负责集群网络 OSD 间通信；',
@@ -646,7 +676,7 @@ const generateExcelFile = async (plan, mainWindow) => {
         workbook.created = new Date();
 
         // 创建工作表（IP总体规划放在最前面）
-        createIpPlanWorksheet(workbook, plan.servers, plan.vms, plan.desktopVmTypes);
+        createIpPlanWorksheet(workbook, plan.servers, plan.vms, plan.desktopVmTypes, plan.summary?.ipUsage);
         createServerWorksheet(workbook, plan.servers);
         createVmWorksheet(workbook, plan.vms);
         createStorageWorksheet(workbook, plan.metadata.parameters); // 传递参数而不是storagePlan
@@ -704,5 +734,6 @@ module.exports = {
     createServerWorksheet,
     createVmWorksheet,
     createStorageWorksheet,
+    generateIpStatusDescription, // 导出用于测试
     EXCEL_STYLES,
 };
