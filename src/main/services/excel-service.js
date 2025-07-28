@@ -183,41 +183,41 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
 
     // 设置表格结构（在B列和C列之间添加IP段列）
     const data = [
-        ['IP整体规划', 'IP需求', 'IP段', '', 'VLAN', '', '备注'],
+        ['IP整体规划', 'IP需求', 'IP段', 'VLAN', '备注'],
         [
             '',
             '管理网IP',
-            mngIpRange,
-            mngIpDescription,
+            mngIpRange,  // 用户填写的IP段，如：192.168.1.10-192.168.1.100
             'VLAN',
-            '',
             '管理网：\n1.负责云桌面管理节点与计算节点，CEPH 管理节点与存储节点之间的通信',
         ],
-        ['', '业务网IP', bizIpRange, bizIpDescription, 'VLAN', '', '业务网：\n1.云桌面虚拟机通信网络；'],
+        [
+            '',
+            '业务网IP',
+            bizIpRange,  // 用户填写的IP段，如：192.168.2.10-192.168.2.100
+            'VLAN',
+            '业务网：\n1.云桌面虚拟机通信网络；'
+        ],
         [
             '',
             '物理机存储公共网IP',
-            pubIpRange,
-            pubIpDescription,
+            pubIpRange,  // 用户填写的IP段，如：192.168.3.10-192.168.3.100
             'VLAN',
-            '',
             '存储公共网：\n1.属于存储网络，负责客户端与CEPH 存储集群、MON 与 MON 间、MON 与 OSD 间的通信；',
         ],
         [
             '',
             '物理机存储集群网IP',
-            cluIpRange,
-            cluIpDescription,
+            cluIpRange,  // 用户填写的IP段，如：192.168.4.10-192.168.4.100
             'VLAN',
-            '',
             '存储集群网：\n1.属于存储网络，负责集群网络 OSD 间通信；',
         ],
-        ['', '桌面虚机IP', '待提供', desktopIpDescription, '', '', ''],
+        ['', '桌面虚机IP', '待提供', '', ''],
     ];
 
     // 动态添加网段行
     for (let i = 1; i <= Math.max(segmentCount, 1); i++) {
-        data.push(['', '', `待提供网段${i}`, '待提供', 'VLAN', '', '']);
+        data.push(['', '', `待提供网段${i}`, '', '']);
     }
 
     // 添加数据行
@@ -230,16 +230,13 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
 
     // 合并单元格
     worksheet.mergeCells(`A1:A${totalRows}`); // 动态合并"IP整体规划"列，根据实际行数
-    worksheet.mergeCells('B1:B1'); // B1单元格为"IP需求"
-    worksheet.mergeCells('C1:C1'); // C1单元格为"IP段"
-    worksheet.mergeCells('E1:F1'); // 合并E1、F1单元格为"VLAN"
-    // G1单元格保持独立，作为"备注"标题
-    worksheet.mergeCells('D7:G7'); // 合并"IP总体规划"sheet页的D7到G7单元格
+    // B1、C1、D1、E1单元格保持独立，分别为"IP需求"、"IP段"、"VLAN"、"备注"
+    worksheet.mergeCells('C6:E6'); // 合并"IP总体规划"sheet页的C6到E6单元格
 
-    // 合并B7和下面的网段行对应的B列单元格
+    // 合并B6和下面的网段行对应的B列单元格
     if (segmentCount > 0) {
-        const startRow = 7; // B7是桌面虚机IP行
-        const endRow = startRow + segmentCount; // B7 + 网段行数
+        const startRow = 6; // B6是桌面虚机IP行
+        const endRow = startRow + segmentCount; // B6 + 网段行数
         worksheet.mergeCells(`B${startRow}:B${endRow}`);
     }
 
