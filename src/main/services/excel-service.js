@@ -699,10 +699,10 @@ const generateExcelFile = async (plan, mainWindow) => {
 
         // 创建工作表（IP总体规划放在最前面）
         const ipRanges = {
-            mngIpRange: plan.params?.mngIpRange,
-            bizIpRange: plan.params?.bizIpRange,
-            pubIpRange: plan.params?.pubIpRange,
-            cluIpRange: plan.params?.cluIpRange,
+            mngIpRange: plan.metadata?.parameters?.mngIpRange,
+            bizIpRange: plan.metadata?.parameters?.bizIpRange,
+            pubIpRange: plan.metadata?.parameters?.pubIpRange,
+            cluIpRange: plan.metadata?.parameters?.cluIpRange,
         };
         createIpPlanWorksheet(workbook, plan.servers, plan.vms, plan.desktopVmTypes, plan.summary?.ipUsage, ipRanges);
         createServerWorksheet(workbook, plan.servers);
