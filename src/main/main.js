@@ -4,6 +4,7 @@
 
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { generatePlan } = require('./generator.js');
 const { generateExcelFile } = require('./services/excel-service');
 const { logger } = require('./services/logger');
@@ -51,8 +52,8 @@ function validateCacheRatio(params) {
 // --- 应用信息常量 ---
 const APP_INFO = {
     title: '关于 ZTEuSmartViewLLD',
-    message: 'ZTEuSmartViewLLD v1.0.1',
-    detail: '软件作者：罗发文\n联系方式：15029342400\n\n版本号：v1.0.1\n更新日期：2025-07-27\n\n云电脑LLD生成工具\n© 2025 网络服务处视频交付科\n\n版本更新：\n• 修复CAG虚机IP分配规则\n• 优化Excel表格列名\n• 增加特别鸣谢功能\n• 去掉规划摘要sheet页',
+    message: 'ZTEuSmartViewLLD v1.0.2',
+    detail: '软件作者：罗发文\n联系方式：15029342400\n\n版本号：v1.0.2\n更新日期：2025-07-28\n\n云电脑LLD生成工具\n© 2025 网络服务处视频交付科\n\nv1.0.2 版本更新：\n• 优化IP地址池状态显示\n• 增强Excel IP总体规划表格\n• 更新特别鸣谢信息\n• 完善测试用例覆盖\n\nv1.0.1 版本更新：\n• 修复CAG虚机IP分配规则\n• 优化Excel表格列名\n• 增加特别鸣谢功能\n• 去掉规划摘要sheet页',
 };
 
 /**

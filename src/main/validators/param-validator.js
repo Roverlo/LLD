@@ -123,7 +123,7 @@ const validateServerCounts = (params) => {
  * @param {Object} params - 输入参数
  * @returns {string[]} 错误信息数组
  */
-const validateIpRanges = (params) => {
+const validateIpRanges = () => {
     // 移除IP段必填验证，允许用户不填IP段来计算IP需求
     // 当没有IP段时，系统会自动分配"待提供IP"
     return [];

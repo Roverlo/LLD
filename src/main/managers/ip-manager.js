@@ -3,7 +3,7 @@
  */
 
 const { parseIpList, validateIpList } = require('../utils/ip-utils');
-const { IP_INSUFFICIENT_TEXT, IP_TO_BE_PROVIDED_TEXT } = require('../constants');
+const { IP_TO_BE_PROVIDED_TEXT } = require('../constants');
 
 /**
  * IP管理器类
@@ -97,7 +97,7 @@ class IpManager {
      * @param {string} usage - 使用类型 ('server' 或 'vm') - 现在仅用于兼容性，实际使用共享计数器
      * @returns {string} IP地址
      */
-    getNextIp(networkType, usage = 'server') {
+    getNextIp(networkType) {
         const pool = this.ipPools[networkType];
         const counter = this.ipCounters[networkType];
 
@@ -187,7 +187,7 @@ class IpManager {
      * @param {string} networkType - 网络类型
      * @param {string} usage - 使用类型（保留参数以兼容，但现在不使用）
      */
-    resetCounter(networkType, usage) {
+    resetCounter(networkType) {
         if (this.ipCounters[networkType] !== undefined) {
             this.ipCounters[networkType] = 0;
         }
