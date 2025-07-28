@@ -100,9 +100,9 @@
     <div class="container">
         <h1>桌面虚机管理测试</h1>
         <p>测试新建虚机删除功能和重新命名功能</p>
-        
+
         <button id="addVmType" class="add-vm-type-btn">新建虚机类型</button>
-        
+
         <div id="desktopVmTypes">
             <!-- 虚机类型A -->
             <div class="desktop-vm-type" data-type="A">
@@ -156,43 +156,19 @@
                 <small class="form-hint">CPU核数、内存大小、存储大小和虚机数量 <button type="button" class="remove-vm-type-btn" onclick="DesktopVmManager.removeVmType('B')">删除</button></small>
             </div>
 
-            <!-- 虚机类型C -->
-            <div class="desktop-vm-type" data-type="C">
-                <div class="vm-type-title">
-                    <label>桌面虚机类型C:</label>
-                </div>
-                <div class="vm-spec-grid">
-                    <div class="vm-spec-row">
-                        <label>CPU核数:</label>
-                        <input type="number" class="vm-cpu" min="1" value="16" />
-                    </div>
-                    <div class="vm-spec-row">
-                        <label>内存(GB):</label>
-                        <input type="number" class="vm-memory" min="1" value="32" />
-                    </div>
-                    <div class="vm-spec-row">
-                        <label>存储(GB):</label>
-                        <input type="number" class="vm-storage" min="1" value="1000" />
-                    </div>
-                    <div class="vm-spec-row">
-                        <label>数量:</label>
-                        <input type="number" class="vm-count" min="0" value="200" />
-                    </div>
-                </div>
-                <small class="form-hint">CPU核数、内存大小、存储大小和虚机数量 <button type="button" class="remove-vm-type-btn" onclick="DesktopVmManager.removeVmType('C')">删除</button></small>
-            </div>
+
         </div>
 
         <div class="total-count">
-            总虚机数量: <span id="totalVmCount">1000</span>
+            总虚机数量: <span id="totalVmCount">800</span>
         </div>
 
         <div style="margin-top: 20px;">
             <h3>测试说明：</h3>
             <ol>
-                <li>点击"新建虚机类型"按钮，应该能创建新的虚机类型（D、E、F...）</li>
+                <li>默认只有虚机类型A和B，点击"新建虚机类型"按钮创建C、D、E等类型</li>
                 <li>新建的虚机类型应该有删除按钮，点击应该能正常删除</li>
-                <li>删除虚机类型B后，原来的C应该变成B，新建的虚机类型应该依次重新命名</li>
+                <li>删除虚机类型B后，新建的虚机类型应该依次重新命名为B、C、D等</li>
                 <li>虚机类型A不能删除（会弹出提示）</li>
                 <li>总虚机数量应该实时更新</li>
             </ol>
@@ -202,7 +178,7 @@
     <script>
         // 简化版的DesktopVmManager，用于测试
         const DesktopVmManager = {
-            nextTypeIndex: 3, // 下一个类型索引 (D, E, F...)
+            nextTypeIndex: 2, // 下一个类型索引 (C, D, E...)
 
             init() {
                 this.bindEvents();
@@ -296,15 +272,15 @@
                 vmTypes.forEach((vmType) => {
                     const currentType = vmType.dataset.type;
                     const newType = String.fromCharCode(65 + currentIndex);
-                    
+
                     if (currentType !== newType) {
                         vmType.dataset.type = newType;
-                        
+
                         const titleLabel = vmType.querySelector('.vm-type-title label');
                         if (titleLabel) {
                             titleLabel.textContent = `桌面虚机类型${newType}:`;
                         }
-                        
+
                         const removeBtn = vmType.querySelector('.remove-vm-type-btn');
                         if (removeBtn) {
                             removeBtn.onclick = (e) => {
@@ -313,7 +289,7 @@
                             };
                         }
                     }
-                    
+
                     currentIndex++;
                 });
 
@@ -340,12 +316,12 @@
                 vmCounts.forEach((input) => {
                     total += parseInt(input.value) || 0;
                 });
-                
+
                 const totalElement = document.getElementById('totalVmCount');
                 if (totalElement) {
                     totalElement.textContent = total;
                 }
-                
+
                 return total;
             }
         };

@@ -780,7 +780,7 @@ const App = {
 
 // --- 桌面虚机类型管理 ---
 const DesktopVmManager = {
-    nextTypeIndex: 3, // 下一个类型索引 (D, E, F...)
+    nextTypeIndex: 2, // 下一个类型索引 (C, D, E...)
 
     /**
      * 初始化桌面虚机类型管理
