@@ -854,6 +854,15 @@ const DesktopVmManager = {
         const countInput = vmTypeDiv.querySelector('.vm-count');
         countInput.addEventListener('input', () => this.updateTotalCount());
 
+        // 绑定删除按钮事件
+        const removeBtn = vmTypeDiv.querySelector('.remove-vm-type-btn');
+        if (removeBtn) {
+            removeBtn.onclick = (e) => {
+                e.preventDefault();
+                this.removeVmType(typeChar);
+            };
+        }
+
         this.updateTotalCount();
     },
 
@@ -872,7 +881,48 @@ const DesktopVmManager = {
         if (vmTypeElement) {
             vmTypeElement.remove();
             this.updateTotalCount();
+
+            // 删除后重新命名所有虚机类型
+            this.renameVmTypes();
         }
+    },
+
+    /**
+     * 重新命名虚机类型，确保连续性（A, B, C, D...）
+     */
+    renameVmTypes() {
+        const vmTypes = document.querySelectorAll('.desktop-vm-type');
+        let currentIndex = 0;
+
+        vmTypes.forEach((vmType) => {
+            const currentType = vmType.dataset.type;
+            const newType = String.fromCharCode(65 + currentIndex); // A=65, B=66, C=67...
+
+            if (currentType !== newType) {
+                // 更新data-type属性
+                vmType.dataset.type = newType;
+
+                // 更新标题
+                const titleLabel = vmType.querySelector('.vm-type-title label');
+                if (titleLabel) {
+                    titleLabel.textContent = `桌面虚机类型${newType}:`;
+                }
+
+                // 更新删除按钮的onclick事件
+                const removeBtn = vmType.querySelector('.remove-vm-type-btn');
+                if (removeBtn) {
+                    removeBtn.onclick = (e) => {
+                        e.preventDefault();
+                        this.removeVmType(newType);
+                    };
+                }
+            }
+
+            currentIndex++;
+        });
+
+        // 更新下一个类型索引
+        this.nextTypeIndex = currentIndex;
     },
 
     /**
