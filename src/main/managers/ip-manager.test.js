@@ -21,8 +21,8 @@ describe('IpManager', () => {
 
     describe('constructor', () => {
         test('should initialize IP pools correctly', () => {
-            expect(ipManager.ipPools.management).toHaveLength(10);
-            expect(ipManager.ipPools.business).toHaveLength(10);
+            expect(ipManager.ipPools.management.length).toBe(10);
+            expect(ipManager.ipPools.business.length).toBe(10);
             expect(ipManager.ipPools.storagePublic.length).toBeGreaterThan(0);
             expect(ipManager.ipPools.storageCluster.length).toBeGreaterThan(0);
         });
@@ -30,7 +30,7 @@ describe('IpManager', () => {
         test('should handle combined network mode', () => {
             const combinedParams = { ...testParams, isNetCombined: true };
             const combinedManager = new IpManager(combinedParams);
-            expect(combinedManager.ipPools.business).toHaveLength(0);
+            expect(combinedManager.ipPools.business.length).toBe(0);
         });
 
         test('should handle empty IP ranges gracefully', () => {
@@ -176,7 +176,7 @@ describe('IpManager', () => {
 
         test('should handle partial ranges at end of pool', () => {
             const range = ipManager.getIpRange('management', 8, 5);
-            expect(range).toHaveLength(2); // Only 2 IPs left from position 8
+            expect(range.length).toBe(2); // Only 2 IPs left from position 8
         });
     });
 
@@ -188,7 +188,7 @@ describe('IpManager', () => {
 
         test('should handle allocation beyond pool size', () => {
             const ips = ipManager.allocateIps('management', 15, 'server');
-            expect(ips).toHaveLength(15);
+            expect(ips.length).toBe(15);
             expect(ips.slice(-5)).toEqual(['待提供IP', '待提供IP', '待提供IP', '待提供IP', '待提供IP']);
         });
     });

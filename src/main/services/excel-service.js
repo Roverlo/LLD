@@ -189,7 +189,7 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
             '管理网IP',
             mngIpRange,  // 用户填写的IP段，如：192.168.1.10-192.168.1.100
             mngIpDescription,  // IP状态描述，如：共需29个IP，已提供91个IP，IP充足
-            'VLAN',
+            '待客户分配',
             '管理网：\n1.负责云桌面管理节点与计算节点，CEPH 管理节点与存储节点之间的通信',
         ],
         [
@@ -197,7 +197,7 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
             '业务网IP',
             bizIpRange,  // 用户填写的IP段，如：192.168.2.10-192.168.2.100
             bizIpDescription,  // IP状态描述
-            'VLAN',
+            '待客户分配',
             '业务网：\n1.云桌面虚拟机通信网络；'
         ],
         [
@@ -205,7 +205,7 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
             '物理机存储公共网IP',
             pubIpRange,  // 用户填写的IP段，如：192.168.3.10-192.168.3.100
             pubIpDescription,  // IP状态描述
-            'VLAN',
+            '待客户分配',
             '存储公共网：\n1.属于存储网络，负责客户端与CEPH 存储集群、MON 与 MON 间、MON 与 OSD 间的通信；',
         ],
         [
@@ -213,7 +213,7 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
             '物理机存储集群网IP',
             cluIpRange,  // 用户填写的IP段，如：192.168.4.10-192.168.4.100
             cluIpDescription,  // IP状态描述
-            'VLAN',
+            '待客户分配',
             '存储集群网：\n1.属于存储网络，负责集群网络 OSD 间通信；',
         ],
         ['', '桌面虚机IP', desktopIpDescription, '', '', ''],  // 桌面虚机IP描述放在C列，将与D列合并

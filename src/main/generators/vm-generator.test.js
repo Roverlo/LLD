@@ -98,7 +98,7 @@ describe('VM Generator', () => {
 
             // 查找CAG虚机
             const cagVms = vms.filter((vm) => vm.name.startsWith('CAG'));
-            expect(cagVms).toHaveLength(2);
+            expect(cagVms.length).toBe(2);
             expect(cagVms[0].name).toBe('CAG01');
             expect(cagVms[1].name).toBe('CAG02');
             expect(cagVms[0].type).toBe('CAG虚机');
@@ -123,7 +123,7 @@ describe('VM Generator', () => {
 
             // 查找CAG虚机
             const cagVms = vms.filter((vm) => vm.name.startsWith('MYCAG'));
-            expect(cagVms).toHaveLength(2);
+            expect(cagVms.length).toBe(2);
             expect(cagVms[0].name).toBe('MYCAG01');
             expect(cagVms[1].name).toBe('MYCAG02');
             expect(cagVms[0].spec).toBe('4C16G，150G');
@@ -141,7 +141,7 @@ describe('VM Generator', () => {
             const vms = generateBaseVms(params, mockIpManager);
 
             const cagVms = vms.filter((vm) => vm.name.startsWith('CAG'));
-            expect(cagVms).toHaveLength(1);
+            expect(cagVms.length).toBe(1);
             expect(cagVms[0].name).toBe('CAG01');
             // 隔离场景下：CAG虚机不分配管理网IP，只分配业务网IP，CAG地址使用业务网IP
             expect(cagVms[0].mngIp).toBe('不涉及');
@@ -161,7 +161,7 @@ describe('VM Generator', () => {
             const vms = generateBaseVms(params, mockIpManager);
 
             const cagVms = vms.filter((vm) => vm.name.startsWith('CAG'));
-            expect(cagVms).toHaveLength(0);
+            expect(cagVms.length).toBe(0);
         });
     });
 
@@ -174,7 +174,7 @@ describe('VM Generator', () => {
 
             const vms = generateCAGPortalVms(params, mockIpManager);
 
-            expect(vms).toHaveLength(1);
+            expect(vms.length).toBe(1);
             expect(vms[0].name).toBe('CAG门户01');
             expect(vms[0].type).toBe('CAG门户虚机');
             expect(vms[0].purpose).toBe('CAG管理门户');
@@ -189,7 +189,7 @@ describe('VM Generator', () => {
 
             const vms = generateCAGPortalVms(params, mockIpManager);
 
-            expect(vms).toHaveLength(0);
+            expect(vms.length).toBe(0);
         });
     });
 
@@ -215,8 +215,8 @@ describe('VM Generator', () => {
             const cagVms = vms.filter((vm) => vm.name.startsWith('CAG') && !vm.name.includes('门户'));
             const cagPortalVms = vms.filter((vm) => vm.name.includes('CAG门户'));
 
-            expect(cagVms).toHaveLength(1); // CAG虚机
-            expect(cagPortalVms).toHaveLength(1); // CAG门户虚机
+            expect(cagVms.length).toBe(1); // CAG虚机
+            expect(cagPortalVms.length).toBe(1); // CAG门户虚机
             expect(vms.length).toBeGreaterThan(10); // 总虚机数量
         });
 
