@@ -465,14 +465,14 @@ const createVmWorksheet = (workbook, vms) => {
     const headers = ['虚机名称', '管理网IP', '业务网IP', 'CAG管理地址', '规格'];
     worksheet.addRow(headers);
 
-    // 对虚机进行排序：insight系列虚机排在一起
+    // 对虚机进行排序：insight系列虚机排在最下面
     const sortedVms = [...vms].sort((a, b) => {
         const aIsInsight = a.name.toLowerCase().includes('insight');
         const bIsInsight = b.name.toLowerCase().includes('insight');
 
-        // 如果一个是insight，一个不是，insight排在前面
-        if (aIsInsight && !bIsInsight) return -1;
-        if (!aIsInsight && bIsInsight) return 1;
+        // 如果一个是insight，一个不是，非insight排在前面
+        if (aIsInsight && !bIsInsight) return 1;
+        if (!aIsInsight && bIsInsight) return -1;
 
         // 如果都是insight或都不是insight，按名称排序
         return a.name.localeCompare(b.name);
