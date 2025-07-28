@@ -118,8 +118,7 @@ h2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 25px;
-    align-items: start; /* 从顶部开始对齐 */
-    grid-auto-rows: 1fr; /* 确保同一行的fieldset等高 */
+    align-items: stretch; /* 拉伸同一行的fieldset到相同高度 */
 }
 
 fieldset {
@@ -159,9 +158,9 @@ fieldset.vm-types-container {
     min-height: auto;
 }
 
-/* Fieldset高度对齐 - 使用CSS Grid等高方案 */
-/* 通过grid-auto-rows: 1fr确保同一行的fieldset自动等高 */
-/* 这是经过测试验证的最可靠方案，无需额外的class或复杂选择器 */
+/* Fieldset高度对齐 - 使用CSS Grid stretch方案 */
+/* 通过align-items: stretch确保同一行的fieldset拉伸到相同高度 */
+/* 这是经过实际6-fieldset布局测试验证的最可靠方案 */
 
 legend {
     color: var(--primary-color);
