@@ -135,7 +135,7 @@ const formatIpRangeDisplay = (ipRange) => {
 };
 
 const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUsage = null, ipRanges = null) => {
-    const worksheet = workbook.addWorksheet('IP总体规划');
+    const worksheet = workbook.addWorksheet('IP整体规划');
 
     // 统计各类IP数量
     const ipStats = {
@@ -183,7 +183,7 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
 
     // 设置表格结构（在B列和C列之间添加IP段列，保留IP状态描述）
     const data = [
-        ['IP整体规划', 'IP需求', 'IP段', 'IP状态', 'VLAN', '备注'],
+        ['IP整体规划', '网络划分', 'IP段', 'IP需求', 'VLAN', '备注'],
         [
             '',
             '管理网IP',
@@ -216,7 +216,7 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
             'VLAN',
             '存储集群网：\n1.属于存储网络，负责集群网络 OSD 间通信；',
         ],
-        ['', '桌面虚机IP', '待提供', desktopIpDescription, '', ''],  // 恢复桌面虚机IP状态描述
+        ['', '桌面虚机IP', desktopIpDescription, '', '', ''],  // 桌面虚机IP描述放在C列，将与D列合并
     ];
 
     // 动态添加网段行
@@ -234,8 +234,10 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
 
     // 合并单元格
     worksheet.mergeCells(`A1:A${totalRows}`); // 动态合并"IP整体规划"列，根据实际行数
-    // B1、C1、D1、E1、F1单元格保持独立，分别为"IP需求"、"IP段"、"IP状态"、"VLAN"、"备注"
-    worksheet.mergeCells('D6:F6'); // 合并"IP总体规划"sheet页的D6到F6单元格
+    // B1、C1、D1、E1、F1单元格保持独立，分别为"网络划分"、"IP段"、"IP需求"、"VLAN"、"备注"
+
+    // 合并桌面虚机IP行的C6和D6单元格，用于显示桌面虚机描述
+    worksheet.mergeCells('C6:D6'); // 合并桌面虚机IP的C6和D6单元格
 
     // 合并B6和下面的网段行对应的B列单元格
     if (segmentCount > 0) {
@@ -270,40 +272,34 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
                 wrapText: true,
             };
 
-            // 第一行表头样式
+            // 第一行表头样式 - 美化格式
             if (rowNumber === 1) {
                 if (colNumber === 1) {
-                    // "IP整体规划"标题：A1到A10合并，14号加粗字体，垂直居中
+                    // "IP整体规划"标题：A1合并列，14号加粗字体，居中对齐，深蓝背景
                     cell.alignment = {
-                        horizontal: 'center', // 保持水平居中
-                        vertical: 'middle', // 垂直居中
-                        wrapText: true,
-                    };
-                    cell.font = { bold: true, size: 14 };
-                } else if (colNumber === 2) {
-                    // "IP需求"标题：B1到C1合并，12号加粗字体，水平居中
-                    cell.alignment = {
-                        horizontal: 'center', // 水平居中
+                        horizontal: 'center',
                         vertical: 'middle',
                         wrapText: true,
                     };
-                    cell.font = { bold: true, size: 12 };
-                } else if (colNumber === 4) {
-                    // "VLAN"标题：D1到E1合并，12号加粗字体，水平居中
+                    cell.font = { bold: true, size: 14, color: { argb: 'FFFFFFFF' } }; // 白色字体
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FF1F4E79' } // 深蓝色背景
+                    };
+                } else if (colNumber >= 2 && colNumber <= 6) {
+                    // 其他表头：统一样式，12号加粗字体，居中对齐，浅蓝背景
                     cell.alignment = {
-                        horizontal: 'center', // 水平居中
+                        horizontal: 'center',
                         vertical: 'middle',
                         wrapText: true,
                     };
-                    cell.font = { bold: true, size: 12 };
-                } else if (colNumber === 6) {
-                    // "备注"标题：F1单元格，12号加粗字体，左对齐、底端对齐
-                    cell.alignment = {
-                        horizontal: 'left',
-                        vertical: 'bottom',
-                        wrapText: true,
+                    cell.font = { bold: true, size: 12, color: { argb: 'FF000000' } }; // 黑色字体
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFD9E2F3' } // 浅蓝色背景
                     };
-                    cell.font = { bold: true, size: 12 };
                 }
             }
 
