@@ -185,7 +185,7 @@ const ParamCollector = {
             userCount: Utils.getFormValue('userCount', 'number', 0),
             insightDeployType: Utils.getFormValue('insightDeployType', 'string'),
             deployTerminalMgmt: Utils.getFormValue('deployTerminalMgmt', 'boolean'),
-            deployCAGPortal: Utils.getFormValue('deployCAGPortal', 'boolean'),
+            deployCAGPortal: Utils.getFormValue('deployCAGPortal', 'string'),
             deployDEM: Utils.getFormValue('deployDEM', 'boolean'),
             downloadType: Utils.getFormValue('downloadType', 'string'),
             storageSecurity: Utils.getFormValue('storageSecurity', 'string'),
