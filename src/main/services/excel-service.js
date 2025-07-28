@@ -465,8 +465,21 @@ const createVmWorksheet = (workbook, vms) => {
     const headers = ['虚机名称', '管理网IP', '业务网IP', 'CAG管理地址', '规格'];
     worksheet.addRow(headers);
 
+    // 对虚机进行排序：insight系列虚机排在一起
+    const sortedVms = [...vms].sort((a, b) => {
+        const aIsInsight = a.name.toLowerCase().includes('insight');
+        const bIsInsight = b.name.toLowerCase().includes('insight');
+
+        // 如果一个是insight，一个不是，insight排在前面
+        if (aIsInsight && !bIsInsight) return -1;
+        if (!aIsInsight && bIsInsight) return 1;
+
+        // 如果都是insight或都不是insight，按名称排序
+        return a.name.localeCompare(b.name);
+    });
+
     // 添加数据行 - 去掉vm.type
-    vms.forEach((vm, index) => {
+    sortedVms.forEach((vm, index) => {
         const rowIndex = index + 2; // 数据行从第2行开始
         worksheet.addRow([vm.name, vm.mngIp, vm.bizIp, vm.cagIp, vm.spec]);
 
