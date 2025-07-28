@@ -219,5 +219,50 @@ describe('VM Generator', () => {
             expect(cagPortalVms.length).toBe(1); // CAG门户虚机
             expect(vms.length).toBeGreaterThan(10); // 总虚机数量
         });
+
+        test('should generate insight VMs with correct configuration', () => {
+            const params = {
+                scene: '管理网和业务网隔离场景_运维通过管理网访问',
+                isNetCombined: false,
+                userCount: 3000,
+                insightDeployType: '高可用部署',
+                deployTerminalMgmt: true,
+                deployCAGPortal: true,
+                countCAG: 0,
+                isZXOPS: false,
+                deployDEM: false,
+                downloadType: '否',
+            };
+
+            const vms = generateAllVms(params, mockIpManager);
+
+            // 验证insight基础虚机
+            expect(vms.some((vm) => vm.name === 'insight_SLB')).toBe(true);
+            expect(vms.some((vm) => vm.name === 'insight_daisyseed02')).toBe(true);
+            expect(vms.some((vm) => vm.name === 'insight_浮动01')).toBe(true);
+            expect(vms.some((vm) => vm.name === 'insight_浮动02')).toBe(true);
+            expect(vms.some((vm) => vm.name === 'insight_浮动03')).toBe(true);
+
+            // 验证insight主要虚机（3000用户，高可用部署）
+            expect(vms.some((vm) => vm.name === 'insight虚机A_Ctrl')).toBe(true);
+            expect(vms.some((vm) => vm.name === 'insight虚机B_组件')).toBe(true);
+            expect(vms.some((vm) => vm.name === 'insight虚机C_ES')).toBe(true);
+
+            // 验证insight网管虚机
+            expect(vms.some((vm) => vm.name === 'insight虚机D01（网管）')).toBe(true);
+            expect(vms.some((vm) => vm.name === 'insight虚机D02（网管）')).toBe(true);
+
+            // 验证insight CAG门户虚机
+            expect(vms.some((vm) => vm.name === 'insight_CAG门户01')).toBe(true);
+            expect(vms.some((vm) => vm.name === 'insight_CAG门户02')).toBe(true);
+            expect(vms.some((vm) => vm.name === 'insight_CAG门户03')).toBe(true);
+
+            // 验证虚机规格
+            const ctrlVm = vms.find((vm) => vm.name === 'insight虚机A_Ctrl');
+            expect(ctrlVm.spec).toBe('16C48G,0.5T+1T');
+
+            const esVm = vms.find((vm) => vm.name === 'insight虚机C_ES');
+            expect(esVm.spec).toBe('16C48G,0.3T+3.0T'); // 3000用户约3T存储
+        });
     });
 });

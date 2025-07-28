@@ -35,6 +35,7 @@ const calculateIpRequirements = (params) => {
         countCalc,
         countStor,
         countCAG,
+        userCount,
         isDualNode,
         isNetCombined,
         insightDeployType,
@@ -56,12 +57,43 @@ const calculateIpRequirements = (params) => {
     // 虚机IP需求估算
     let vmCount = 11; // 基础虚机数量
 
-    if (insightDeployType === '高可用部署') vmCount += 3;
-    else if (insightDeployType === '非高可用部署') vmCount += 1;
+    // Insight虚机数量估算（基于WPS JS逻辑）
+    if (insightDeployType !== '否') {
+        vmCount += 4; // 基础虚机：insight_SLB + insight_daisyseed02 + 3个浮动虚机
+
+        if (insightDeployType === '非高可用部署') {
+            if (userCount <= 2000) {
+                vmCount += 1; // insight虚机A_Ctrl
+            } else if (userCount <= 5000) {
+                vmCount += 3; // insight虚机A_Ctrl + insight虚机B_组件 + insight虚机C_ES
+            }
+        } else if (insightDeployType === '高可用部署') {
+            if (userCount <= 2000) {
+                vmCount += 2; // insight虚机A_Ctrl + insight虚机C_ES
+                if (deployTerminalMgmt) vmCount += 2; // insight虚机C网管
+            } else if (userCount <= 5000) {
+                vmCount += 3; // insight虚机A_Ctrl + insight虚机B_组件 + insight虚机C_ES
+                if (deployTerminalMgmt) vmCount += 2; // insight虚机D网管
+            } else {
+                vmCount += 3; // 3个控制节点
+                vmCount += 5; // 5个组件节点
+                const m = Math.ceil(userCount / 1000);
+                const n = Math.ceil(m / 6);
+                vmCount += n; // ES集群节点
+                if (deployTerminalMgmt) vmCount += 2; // insight虚机D网管
+            }
+        }
+
+        // CAG门户虚机
+        if (deployCAGPortal) {
+            vmCount += 1; // insight_CAG门户01
+            if (insightDeployType === '高可用部署') {
+                vmCount += 2; // insight_CAG门户02 + insight_CAG门户03
+            }
+        }
+    }
 
     if (isZXOPS) vmCount += 1;
-    if (deployTerminalMgmt) vmCount += 1;
-    if (deployCAGPortal) vmCount += 1;
     if (deployDEM) vmCount += 1;
     if (downloadType === '集群') vmCount += 2;
     else if (downloadType === '单机') vmCount += 1;

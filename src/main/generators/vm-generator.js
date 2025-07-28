@@ -139,7 +139,7 @@ const generateBaseVms = (params, ipManager) => {
  * @returns {Object[]} 虚机列表
  */
 const generateInsightVms = (params, ipManager) => {
-    const { insightDeployType, isNetCombined } = params;
+    const { insightDeployType, isNetCombined, userCount, deployTerminalMgmt, deployCAGPortal } = params;
     const vms = [];
 
     if (insightDeployType === '否') {
@@ -147,33 +147,331 @@ const generateInsightVms = (params, ipManager) => {
     }
 
     const isHA = insightDeployType === '高可用部署';
-    const vmCount = isHA ? 2 : 1;
 
-    for (let i = 1; i <= vmCount; i++) {
-        const name = isHA ? `Insight${i.toString().padStart(2, '0')}` : 'Insight01';
-        const mngIp = ipManager.getNextIp('management', 'vm');
-        const bizIp = isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business', 'vm');
-        const spec = '8C16G200G';
+    // 生成基础虚机（所有部署类型都需要）
+    generateInsightBaseVms(vms, ipManager, isNetCombined);
 
-        const vm = createVmObject(name, 'Insight虚机', '运维监控平台', mngIp, bizIp, NOT_APPLICABLE_TEXT, spec);
-        vms.push(vm);
+    // 根据部署类型和用户数量生成主要虚机
+    if (isHA) {
+        generateInsightHAVms(vms, ipManager, isNetCombined, userCount, deployTerminalMgmt);
+    } else {
+        generateInsightStandaloneVms(vms, ipManager, isNetCombined, userCount);
     }
 
-    // 高可用模式下添加浮动IP虚机
-    if (isHA) {
+    // 生成CAG门户虚机（如果需要）
+    if (deployCAGPortal) {
+        generateInsightCAGPortalVms(vms, ipManager, isNetCombined, isHA);
+    }
+
+    return vms;
+};
+
+/**
+ * 生成Insight基础虚机
+ * @param {Object[]} vms - 虚机列表
+ * @param {Object} ipManager - IP管理器
+ * @param {boolean} isNetCombined - 是否网络合并
+ */
+const generateInsightBaseVms = (vms, ipManager, isNetCombined) => {
+    // insight_SLB (负载均衡器)
+    const slbVm = createVmObject(
+        'insight_SLB',
+        'Insight虚机',
+        'Insight负载均衡器',
+        ipManager.getNextIp('management'),
+        isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+        NOT_APPLICABLE_TEXT,
+        NOT_APPLICABLE_TEXT
+    );
+    vms.push(slbVm);
+
+    // insight_daisyseed02 (基础服务)
+    const daisyseedVm = createVmObject(
+        'insight_daisyseed02',
+        'Insight虚机',
+        'Insight基础服务',
+        ipManager.getNextIp('management'),
+        isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+        NOT_APPLICABLE_TEXT,
+        '4C8G100G'
+    );
+    vms.push(daisyseedVm);
+
+    // insight_浮动01-03 (浮动IP虚机)
+    for (let i = 1; i <= 3; i++) {
         const floatVm = createVmObject(
-            'Insight浮动01',
+            `insight_浮动${i.toString().padStart(2, '0')}`,
             'Insight虚机',
-            '运维监控平台浮动IP',
-            ipManager.getNextIp('management', 'vm'),
-            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business', 'vm'),
+            'Insight浮动IP',
+            ipManager.getNextIp('management'),
+            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
             NOT_APPLICABLE_TEXT,
             NOT_APPLICABLE_TEXT
         );
         vms.push(floatVm);
     }
+};
 
-    return vms;
+/**
+ * 生成Insight非高可用部署虚机
+ * @param {Object[]} vms - 虚机列表
+ * @param {Object} ipManager - IP管理器
+ * @param {boolean} isNetCombined - 是否网络合并
+ * @param {number} userCount - 用户数量
+ */
+const generateInsightStandaloneVms = (vms, ipManager, isNetCombined, userCount) => {
+    if (userCount <= 2000) {
+        // 小规模部署：单个控制虚机
+        const m = Math.ceil(userCount / 1000); // 每1000用户约1T存储
+        const ctrlVm = createVmObject(
+            'insight虚机A_Ctrl',
+            'Insight虚机',
+            'Insight控制节点',
+            ipManager.getNextIp('management'),
+            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+            NOT_APPLICABLE_TEXT,
+            `32C96G,0.5T+${(m + 0.8).toFixed(1)}T`
+        );
+        vms.push(ctrlVm);
+    } else if (userCount <= 5000) {
+        // 中等规模部署：控制节点 + 组件节点
+        const ctrlVm = createVmObject(
+            'insight虚机A_Ctrl',
+            'Insight虚机',
+            'Insight控制节点',
+            ipManager.getNextIp('management'),
+            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+            NOT_APPLICABLE_TEXT,
+            '16C48G,0.5T+1T'
+        );
+        vms.push(ctrlVm);
+
+        const componentVm = createVmObject(
+            'insight虚机B_组件',
+            'Insight虚机',
+            'Insight组件节点',
+            ipManager.getNextIp('management'),
+            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+            NOT_APPLICABLE_TEXT,
+            '16C48G,0.3T+0.5T'
+        );
+        vms.push(componentVm);
+
+        const m = Math.ceil(userCount / 1000);
+        const esVm = createVmObject(
+            'insight虚机C_ES',
+            'Insight虚机',
+            'Insight搜索引擎',
+            ipManager.getNextIp('management'),
+            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+            NOT_APPLICABLE_TEXT,
+            `16C48G,0.3T+${m.toFixed(1)}T`
+        );
+        vms.push(esVm);
+    } else {
+        throw new Error('用户量>5000时只能选高可用部署');
+    }
+};
+
+/**
+ * 生成Insight高可用部署虚机
+ * @param {Object[]} vms - 虚机列表
+ * @param {Object} ipManager - IP管理器
+ * @param {boolean} isNetCombined - 是否网络合并
+ * @param {number} userCount - 用户数量
+ * @param {boolean} deployTerminalMgmt - 是否部署终端网管
+ */
+const generateInsightHAVms = (vms, ipManager, isNetCombined, userCount, deployTerminalMgmt) => {
+    if (userCount <= 2000) {
+        // 小规模高可用部署
+        const ctrlVm = createVmObject(
+            'insight虚机A_Ctrl',
+            'Insight虚机',
+            'Insight控制节点',
+            ipManager.getNextIp('management'),
+            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+            NOT_APPLICABLE_TEXT,
+            '16C48G,0.5T+1T'
+        );
+        vms.push(ctrlVm);
+
+        const m = Math.ceil(userCount / 1000);
+        const esVm = createVmObject(
+            'insight虚机C_ES',
+            'Insight虚机',
+            'Insight搜索引擎',
+            ipManager.getNextIp('management'),
+            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+            NOT_APPLICABLE_TEXT,
+            `16C48G,0.3T+${m.toFixed(1)}T`
+        );
+        vms.push(esVm);
+
+        // 生成网管虚机（如果需要）
+        if (deployTerminalMgmt) {
+            generateInsightNetMgmtVms(vms, ipManager, isNetCombined, 'insight虚机C', 2);
+        }
+    } else if (userCount <= 5000) {
+        // 中等规模高可用部署
+        const ctrlVm = createVmObject(
+            'insight虚机A_Ctrl',
+            'Insight虚机',
+            'Insight控制节点',
+            ipManager.getNextIp('management'),
+            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+            NOT_APPLICABLE_TEXT,
+            '16C48G,0.5T+1T'
+        );
+        vms.push(ctrlVm);
+
+        const componentVm = createVmObject(
+            'insight虚机B_组件',
+            'Insight虚机',
+            'Insight组件节点',
+            ipManager.getNextIp('management'),
+            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+            NOT_APPLICABLE_TEXT,
+            '16C48G,0.3T+0.5T'
+        );
+        vms.push(componentVm);
+
+        const m = Math.ceil(userCount / 1000);
+        const esVm = createVmObject(
+            'insight虚机C_ES',
+            'Insight虚机',
+            'Insight搜索引擎',
+            ipManager.getNextIp('management'),
+            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+            NOT_APPLICABLE_TEXT,
+            `16C48G,0.3T+${m.toFixed(1)}T`
+        );
+        vms.push(esVm);
+
+        // 生成网管虚机（如果需要）
+        if (deployTerminalMgmt) {
+            generateInsightNetMgmtVms(vms, ipManager, isNetCombined, 'insight虚机D', 2);
+        }
+    } else {
+        // 大规模高可用部署 (>5000用户)
+        // 控制节点集群
+        for (let i = 1; i <= 3; i++) {
+            const ctrlVm = createVmObject(
+                `insight虚机A_Ctrl${i.toString().padStart(2, '0')}`,
+                'Insight虚机',
+                'Insight控制节点',
+                ipManager.getNextIp('management'),
+                isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+                NOT_APPLICABLE_TEXT,
+                '16C48G,0.5T+1.5T'
+            );
+            vms.push(ctrlVm);
+        }
+
+        // 组件节点集群
+        for (let i = 1; i <= 5; i++) {
+            const componentVm = createVmObject(
+                `insight虚机B_组件${i.toString().padStart(2, '0')}`,
+                'Insight虚机',
+                'Insight组件节点',
+                ipManager.getNextIp('management'),
+                isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+                NOT_APPLICABLE_TEXT,
+                '16C48G,0.3T+1T'
+            );
+            vms.push(componentVm);
+        }
+
+        // ES集群
+        const m = Math.ceil(userCount / 1000);
+        const n = Math.ceil(m / 6); // 每个ES节点最多6T存储
+        for (let i = 1; i <= n; i++) {
+            const cap = Math.min(m, 6);
+            const esVm = createVmObject(
+                `insight虚机C_ES${i.toString().padStart(2, '0')}`,
+                'Insight虚机',
+                'Insight搜索引擎',
+                ipManager.getNextIp('management'),
+                isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+                NOT_APPLICABLE_TEXT,
+                `16C48G,0.3T+${cap.toFixed(1)}T`
+            );
+            vms.push(esVm);
+        }
+
+        // 生成网管虚机（如果需要）
+        if (deployTerminalMgmt) {
+            generateInsightNetMgmtVms(vms, ipManager, isNetCombined, 'insight虚机D', 2);
+        }
+    }
+};
+
+/**
+ * 生成Insight网管虚机
+ * @param {Object[]} vms - 虚机列表
+ * @param {Object} ipManager - IP管理器
+ * @param {boolean} isNetCombined - 是否网络合并
+ * @param {string} prefix - 虚机名前缀
+ * @param {number} count - 虚机数量
+ */
+const generateInsightNetMgmtVms = (vms, ipManager, isNetCombined, prefix, count) => {
+    for (let i = 1; i <= count; i++) {
+        const netMgmtVm = createVmObject(
+            `${prefix}${i.toString().padStart(2, '0')}（网管）`,
+            'Insight虚机',
+            'Insight终端网管',
+            ipManager.getNextIp('management'),
+            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+            NOT_APPLICABLE_TEXT,
+            '8C24G,0.3T+1T'
+        );
+        vms.push(netMgmtVm);
+    }
+};
+
+/**
+ * 生成Insight CAG门户虚机
+ * @param {Object[]} vms - 虚机列表
+ * @param {Object} ipManager - IP管理器
+ * @param {boolean} isNetCombined - 是否网络合并
+ * @param {boolean} isHA - 是否高可用部署
+ */
+const generateInsightCAGPortalVms = (vms, ipManager, isNetCombined, isHA) => {
+    // 主CAG门户
+    const cagPortal01 = createVmObject(
+        'insight_CAG门户01',
+        'Insight虚机',
+        'Insight CAG门户',
+        ipManager.getNextIp('management'),
+        isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+        NOT_APPLICABLE_TEXT,
+        '8C16G,400G'
+    );
+    vms.push(cagPortal01);
+
+    // 高可用模式下添加备用CAG门户
+    if (isHA) {
+        const cagPortal02 = createVmObject(
+            'insight_CAG门户02',
+            'Insight虚机',
+            'Insight CAG门户备用',
+            ipManager.getNextIp('management'),
+            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+            NOT_APPLICABLE_TEXT,
+            '4C8G,300G'
+        );
+        vms.push(cagPortal02);
+
+        const cagPortal03 = createVmObject(
+            'insight_CAG门户03',
+            'Insight虚机',
+            'Insight CAG门户备用',
+            ipManager.getNextIp('management'),
+            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
+            NOT_APPLICABLE_TEXT,
+            '4C8G,300G'
+        );
+        vms.push(cagPortal03);
+    }
 };
 
 /**
