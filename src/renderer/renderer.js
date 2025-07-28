@@ -879,20 +879,18 @@ const DesktopVmManager = {
      * 为现有类型添加删除按钮（除了A）
      */
     addRemoveButtons() {
-        const vmTypes = document.querySelectorAll('.desktop-vm-type');
-        vmTypes.forEach((vmType) => {
-            const type = vmType.dataset.type;
-            // 只有A类型不添加删除按钮，B、C类型现在可以删除
-            if (type !== 'A') {
-                const vmTypeRow = vmType.querySelector('.vm-type-row');
-                if (vmTypeRow && !vmTypeRow.querySelector('.remove-vm-type-btn')) {
-                    const removeBtn = document.createElement('button');
-                    removeBtn.type = 'button';
-                    removeBtn.className = 'remove-vm-type-btn';
-                    removeBtn.textContent = '删除';
-                    removeBtn.onclick = () => this.removeVmType(type);
-                    vmTypeRow.appendChild(removeBtn);
-                }
+        // 这个函数现在主要用于确保删除按钮的事件绑定正确
+        // HTML中已经有删除按钮，我们只需要确保事件处理正确
+        const removeButtons = document.querySelectorAll('.remove-vm-type-btn');
+        removeButtons.forEach((btn) => {
+            // 重新绑定事件，确保使用正确的this上下文
+            const vmType = btn.closest('.desktop-vm-type');
+            if (vmType) {
+                const type = vmType.dataset.type;
+                btn.onclick = (e) => {
+                    e.preventDefault();
+                    this.removeVmType(type);
+                };
             }
         });
     },
@@ -925,6 +923,9 @@ const DesktopVmManager = {
         return this.updateTotalCount();
     },
 };
+
+// 将DesktopVmManager暴露为全局对象，供HTML onclick使用
+window.DesktopVmManager = DesktopVmManager;
 
 // --- 应用启动 ---
 window.addEventListener('DOMContentLoaded', () => {

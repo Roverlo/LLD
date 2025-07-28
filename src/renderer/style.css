@@ -581,18 +581,27 @@ fieldset {
 
 .remove-vm-type-btn {
     padding: 6px 12px;
-    background: rgba(231, 76, 60, 0.8);
-    border: none;
+    background: linear-gradient(45deg, #8e44ad, #9b59b6);
+    border: 1px solid rgba(142, 68, 173, 0.3);
     border-radius: 4px;
     color: white;
     font-size: 12px;
     cursor: pointer;
     margin-left: 10px;
     transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(142, 68, 173, 0.2);
 }
 
 .remove-vm-type-btn:hover {
-    background: rgba(231, 76, 60, 1);
+    background: linear-gradient(45deg, #7d3c98, #8e44ad);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(142, 68, 173, 0.3);
+    border-color: rgba(142, 68, 173, 0.5);
+}
+
+.remove-vm-type-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(142, 68, 173, 0.2);
 }
 
 #totalVmCount {
