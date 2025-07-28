@@ -2,7 +2,7 @@
  * 虚机生成器测试
  */
 
-const { createVmObject, getVmSpec, generateBaseVms, generateCAGPortalVms, generateAllVms } = require('./vm-generator');
+const { createVmObject, getVmSpec, generateBaseVms, generateCAGPortalVms, generateTerminalMgmtVms, generateAllVms } = require('./vm-generator');
 
 const { NOT_APPLICABLE_TEXT } = require('../constants');
 
@@ -210,6 +210,20 @@ describe('VM Generator', () => {
         });
     });
 
+    describe('generateTerminalMgmtVms', () => {
+        test('should not generate independent terminal management VM', () => {
+            // 终端网管现在只通过Insight集成方式生成，不再生成独立的终端网管虚机
+            const params = {
+                deployTerminalMgmt: true,
+                isNetCombined: false,
+            };
+
+            const vms = generateTerminalMgmtVms(params, mockIpManager);
+
+            expect(vms.length).toBe(0); // 应该返回空数组
+        });
+    });
+
     describe('generateAllVms', () => {
         test('should generate all VMs including CAG VMs', () => {
             const params = {
@@ -244,7 +258,7 @@ describe('VM Generator', () => {
                 userCount: 3000,
                 insightDeployType: '高可用部署',
                 deployTerminalMgmt: true,
-                deployCAGPortal: true,
+                deployCAGPortal: '高可用部署',
                 countCAG: 0,
                 isZXOPS: false,
                 deployDEM: false,

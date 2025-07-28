@@ -155,13 +155,10 @@ const generateInsightVms = (params, ipManager) => {
     if (isHA) {
         generateInsightHAVms(vms, ipManager, isNetCombined, userCount, deployTerminalMgmt);
     } else {
-        generateInsightStandaloneVms(vms, ipManager, isNetCombined, userCount);
+        generateInsightStandaloneVms(vms, ipManager, isNetCombined, userCount, deployTerminalMgmt);
     }
 
-    // 生成CAG门户虚机（如果需要）
-    if (deployCAGPortal) {
-        generateInsightCAGPortalVms(vms, ipManager, isNetCombined, isHA);
-    }
+    // CAG门户现在通过独立的generateCAGPortalVms函数生成，这里不再重复生成
 
     return vms;
 };
@@ -218,8 +215,9 @@ const generateInsightBaseVms = (vms, ipManager, isNetCombined) => {
  * @param {Object} ipManager - IP管理器
  * @param {boolean} isNetCombined - 是否网络合并
  * @param {number} userCount - 用户数量
+ * @param {boolean} deployTerminalMgmt - 是否部署终端网管
  */
-const generateInsightStandaloneVms = (vms, ipManager, isNetCombined, userCount) => {
+const generateInsightStandaloneVms = (vms, ipManager, isNetCombined, userCount, deployTerminalMgmt) => {
     if (userCount <= 2000) {
         // 小规模部署：单个控制虚机
         const m = Math.ceil(userCount / 1000); // 每1000用户约1T存储
@@ -233,6 +231,11 @@ const generateInsightStandaloneVms = (vms, ipManager, isNetCombined, userCount) 
             `32C96G,0.5T+${(m + 0.8).toFixed(1)}T`
         );
         vms.push(ctrlVm);
+
+        // 生成网管虚机（如果需要）
+        if (deployTerminalMgmt) {
+            generateInsightNetMgmtVms(vms, ipManager, isNetCombined, 'insight虚机D', 2);
+        }
     } else if (userCount <= 5000) {
         // 中等规模部署：控制节点 + 组件节点
         const ctrlVm = createVmObject(
@@ -268,6 +271,11 @@ const generateInsightStandaloneVms = (vms, ipManager, isNetCombined, userCount) 
             `16C48G,0.3T+${m.toFixed(1)}T`
         );
         vms.push(esVm);
+
+        // 生成网管虚机（如果需要）
+        if (deployTerminalMgmt) {
+            generateInsightNetMgmtVms(vms, ipManager, isNetCombined, 'insight虚机D', 2);
+        }
     } else {
         throw new Error('用户量>5000时只能选高可用部署');
     }
@@ -503,31 +511,15 @@ const generateZXOPSVms = (params, ipManager) => {
 };
 
 /**
- * 生成终端网管虚机
+ * 生成终端网管虚机 - 现在只通过Insight集成方式生成
  * @param {Object} params - 参数
  * @param {Object} ipManager - IP管理器
  * @returns {Object[]} 虚机列表
  */
 const generateTerminalMgmtVms = (params, ipManager) => {
-    const { deployTerminalMgmt, isNetCombined } = params;
-    const vms = [];
-
-    if (!deployTerminalMgmt) {
-        return vms;
-    }
-
-    const terminalVm = createVmObject(
-        '终端网管01',
-        '终端网管虚机',
-        '终端设备管理',
-        ipManager.getNextIp('management', 'vm'),
-        isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business', 'vm'),
-        NOT_APPLICABLE_TEXT,
-        '4C8G100G'
-    );
-    vms.push(terminalVm);
-
-    return vms;
+    // 终端网管现在只通过Insight集成方式生成，不再生成独立的终端网管虚机
+    // 这个函数保留是为了保持API兼容性，但不再生成任何虚机
+    return [];
 };
 
 /**
@@ -664,7 +656,7 @@ const generateAllVms = (params, ipManager) => {
     // 生成可选组件虚机
     vms.push(...generateInsightVms(params, ipManager));
     vms.push(...generateZXOPSVms(params, ipManager));
-    vms.push(...generateTerminalMgmtVms(params, ipManager));
+    // 终端网管现在只通过Insight集成方式生成，不再生成独立的终端网管虚机
     vms.push(...generateCAGPortalVms(params, ipManager));
     vms.push(...generateDEMVms(params, ipManager));
     vms.push(...generateDownloadVms(params, ipManager));
