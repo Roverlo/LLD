@@ -181,13 +181,14 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
     const pubIpRange = formatIpRangeDisplay(ipRanges?.pubIpRange);
     const cluIpRange = formatIpRangeDisplay(ipRanges?.cluIpRange);
 
-    // 设置表格结构（在B列和C列之间添加IP段列）
+    // 设置表格结构（在B列和C列之间添加IP段列，保留IP状态描述）
     const data = [
-        ['IP整体规划', 'IP需求', 'IP段', 'VLAN', '备注'],
+        ['IP整体规划', 'IP需求', 'IP段', 'IP状态', 'VLAN', '备注'],
         [
             '',
             '管理网IP',
             mngIpRange,  // 用户填写的IP段，如：192.168.1.10-192.168.1.100
+            mngIpDescription,  // IP状态描述，如：共需29个IP，已提供91个IP，IP充足
             'VLAN',
             '管理网：\n1.负责云桌面管理节点与计算节点，CEPH 管理节点与存储节点之间的通信',
         ],
@@ -195,6 +196,7 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
             '',
             '业务网IP',
             bizIpRange,  // 用户填写的IP段，如：192.168.2.10-192.168.2.100
+            bizIpDescription,  // IP状态描述
             'VLAN',
             '业务网：\n1.云桌面虚拟机通信网络；'
         ],
@@ -202,6 +204,7 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
             '',
             '物理机存储公共网IP',
             pubIpRange,  // 用户填写的IP段，如：192.168.3.10-192.168.3.100
+            pubIpDescription,  // IP状态描述
             'VLAN',
             '存储公共网：\n1.属于存储网络，负责客户端与CEPH 存储集群、MON 与 MON 间、MON 与 OSD 间的通信；',
         ],
@@ -209,15 +212,16 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
             '',
             '物理机存储集群网IP',
             cluIpRange,  // 用户填写的IP段，如：192.168.4.10-192.168.4.100
+            cluIpDescription,  // IP状态描述
             'VLAN',
             '存储集群网：\n1.属于存储网络，负责集群网络 OSD 间通信；',
         ],
-        ['', '桌面虚机IP', '待提供', '', ''],
+        ['', '桌面虚机IP', '待提供', desktopIpDescription, '', ''],  // 恢复桌面虚机IP状态描述
     ];
 
     // 动态添加网段行
     for (let i = 1; i <= Math.max(segmentCount, 1); i++) {
-        data.push(['', '', `待提供网段${i}`, '', '']);
+        data.push(['', '', `待提供网段${i}`, '', '', '']);
     }
 
     // 添加数据行
@@ -230,8 +234,8 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
 
     // 合并单元格
     worksheet.mergeCells(`A1:A${totalRows}`); // 动态合并"IP整体规划"列，根据实际行数
-    // B1、C1、D1、E1单元格保持独立，分别为"IP需求"、"IP段"、"VLAN"、"备注"
-    worksheet.mergeCells('C6:E6'); // 合并"IP总体规划"sheet页的C6到E6单元格
+    // B1、C1、D1、E1、F1单元格保持独立，分别为"IP需求"、"IP段"、"IP状态"、"VLAN"、"备注"
+    worksheet.mergeCells('D6:F6'); // 合并"IP总体规划"sheet页的D6到F6单元格
 
     // 合并B6和下面的网段行对应的B列单元格
     if (segmentCount > 0) {
