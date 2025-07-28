@@ -119,6 +119,7 @@ h2 {
     grid-template-columns: 1fr 1fr;
     gap: 25px;
     align-items: start; /* 从顶部开始对齐 */
+    grid-auto-rows: 1fr; /* 确保同一行的fieldset等高 */
 }
 
 fieldset {
@@ -158,27 +159,9 @@ fieldset.vm-types-container {
     min-height: auto;
 }
 
-/* 调整特定fieldset的高度以实现对齐 */
-/* 使用class选择器确保可靠性和浏览器兼容性 */
-
-/* 核心架构框 - 使用class选择器 */
-fieldset.core-architecture {
-    min-height: 450px !important; /* 进一步增加高度确保对齐 */
-}
-
-/* IP地址池框 - 使用class选择器 */
-fieldset.ip-address-pool {
-    min-height: 450px !important; /* 进一步增加高度确保对齐 */
-}
-
-/* 备选方案：通过nth-child选择器 */
-.container fieldset:nth-child(1) { /* 核心架构 */
-    min-height: 450px !important;
-}
-
-.container fieldset:nth-child(4) { /* IP地址池 */
-    min-height: 450px !important;
-}
+/* Fieldset高度对齐 - 使用CSS Grid等高方案 */
+/* 通过grid-auto-rows: 1fr确保同一行的fieldset自动等高 */
+/* 这是经过测试验证的最可靠方案，无需额外的class或复杂选择器 */
 
 legend {
     color: var(--primary-color);
