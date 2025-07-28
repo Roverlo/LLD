@@ -444,7 +444,7 @@ const generateInsightCAGPortalVms = (vms, ipManager, isNetCombined, isHA) => {
         ipManager.getNextIp('management'),
         isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
         NOT_APPLICABLE_TEXT,
-        '8C16G,400G'
+        '8C16G,200GB+300GB'
     );
     vms.push(cagPortal01);
 
@@ -457,7 +457,7 @@ const generateInsightCAGPortalVms = (vms, ipManager, isNetCombined, isHA) => {
             ipManager.getNextIp('management'),
             isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
             NOT_APPLICABLE_TEXT,
-            '4C8G,300G'
+            '4C8G,200GB+200GB'
         );
         vms.push(cagPortal02);
 
@@ -468,7 +468,7 @@ const generateInsightCAGPortalVms = (vms, ipManager, isNetCombined, isHA) => {
             ipManager.getNextIp('management'),
             isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
             NOT_APPLICABLE_TEXT,
-            '4C8G,300G'
+            '4C8G,200GB+200GB'
         );
         vms.push(cagPortal03);
     }
