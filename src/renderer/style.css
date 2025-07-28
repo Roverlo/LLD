@@ -159,24 +159,25 @@ fieldset.vm-types-container {
 }
 
 /* 调整特定fieldset的高度以实现对齐 */
-/* 核心架构框 - 增加高度以匹配服务器数量与命名框 */
-fieldset:has(legend:contains("核心架构")) {
-    min-height: 350px; /* 增加最小高度 */
+/* 使用更可靠的选择器来定位特定的fieldset */
+
+/* 核心架构框 - 通过包含isNetCombined元素来识别 */
+fieldset:has(#isNetCombined) {
+    min-height: 400px !important; /* 增加最小高度，使用!important确保优先级 */
 }
 
-/* IP地址池框 - 增加高度以匹配服务器配置信息框 */
-fieldset:has(legend:contains("IP地址池")) {
-    min-height: 350px; /* 增加最小高度 */
+/* IP地址池框 - 通过包含mngIpRange元素来识别 */
+fieldset:has(#mngIpRange) {
+    min-height: 400px !important; /* 增加最小高度，使用!important确保优先级 */
 }
 
-/* 如果浏览器不支持:has()或:contains()，使用更通用的方式 */
-/* 通过nth-child选择器来定位特定的fieldset */
+/* 如果浏览器不支持:has()，使用nth-child作为备选 */
 .container fieldset:nth-child(1) { /* 核心架构 */
-    min-height: 350px;
+    min-height: 400px !important;
 }
 
 .container fieldset:nth-child(4) { /* IP地址池 */
-    min-height: 350px;
+    min-height: 400px !important;
 }
 
 legend {
