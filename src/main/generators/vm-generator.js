@@ -531,7 +531,7 @@ const generateTerminalMgmtVms = (params, ipManager) => {
 };
 
 /**
- * 生成CAG门户虚机
+ * 生成CAG门户虚机 - 使用Insight集成CAG门户逻辑
  * @param {Object} params - 参数
  * @param {Object} ipManager - IP管理器
  * @returns {Object[]} 虚机列表
@@ -540,20 +540,49 @@ const generateCAGPortalVms = (params, ipManager) => {
     const { deployCAGPortal, isNetCombined } = params;
     const vms = [];
 
-    if (!deployCAGPortal) {
+    if (deployCAGPortal === '否') {
         return vms;
     }
 
-    const cagPortalVm = createVmObject(
-        'CAG门户01',
-        'CAG门户虚机',
-        'CAG管理门户',
+    // 使用Insight集成CAG门户的逻辑
+    const isHA = deployCAGPortal === '高可用部署';
+
+    // 主CAG门户
+    const cagPortal01 = createVmObject(
+        'insight_CAG门户01',
+        'Insight虚机',
+        'Insight CAG门户',
         ipManager.getNextIp('management', 'vm'),
         isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business', 'vm'),
         NOT_APPLICABLE_TEXT,
-        '4C8G100G'
+        '8C16G,200GB+300GB'
     );
-    vms.push(cagPortalVm);
+    vms.push(cagPortal01);
+
+    // 高可用模式下添加备用CAG门户
+    if (isHA) {
+        const cagPortal02 = createVmObject(
+            'insight_CAG门户02',
+            'Insight虚机',
+            'Insight CAG门户备用',
+            ipManager.getNextIp('management', 'vm'),
+            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business', 'vm'),
+            NOT_APPLICABLE_TEXT,
+            '4C8G,200GB+200GB'
+        );
+        vms.push(cagPortal02);
+
+        const cagPortal03 = createVmObject(
+            'insight_CAG门户03',
+            'Insight虚机',
+            'Insight CAG门户备用',
+            ipManager.getNextIp('management', 'vm'),
+            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business', 'vm'),
+            NOT_APPLICABLE_TEXT,
+            '4C8G,200GB+200GB'
+        );
+        vms.push(cagPortal03);
+    }
 
     return vms;
 };

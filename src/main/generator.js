@@ -84,10 +84,10 @@ const calculateIpRequirements = (params) => {
             }
         }
 
-        // CAG门户虚机
-        if (deployCAGPortal) {
+        // CAG门户虚机 - 独立部署逻辑
+        if (deployCAGPortal !== '否') {
             vmCount += 1; // insight_CAG门户01
-            if (insightDeployType === '高可用部署') {
+            if (deployCAGPortal === '高可用部署') {
                 vmCount += 2; // insight_CAG门户02 + insight_CAG门户03
             }
         }

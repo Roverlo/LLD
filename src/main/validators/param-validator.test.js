@@ -48,11 +48,11 @@ describe('Parameter Validator', () => {
             expect(alerts).toContain('只提供终端网管与insight合设的规划，请取消勾选"部署终端网管"。');
         });
 
-        test('should validate Insight and CAG portal dependency', () => {
+        test('should allow CAG portal deployment independently', () => {
             const params = {
                 insightDeployType: '否',
                 deployTerminalMgmt: false,
-                deployCAGPortal: true,
+                deployCAGPortal: '高可用部署',
                 isNetCombined: true,
                 scene: '管理网和业务网合一场景',
                 isDualNode: false,
@@ -63,7 +63,8 @@ describe('Parameter Validator', () => {
             };
 
             const alerts = validateParams(params);
-            expect(alerts).toContain('只提供CAG门户与insight合设的规划，请取消勾选"部署CAG门户"。');
+            // CAG门户现在可以独立部署，不应该有依赖关系错误
+            expect(alerts).not.toContain('只提供CAG门户与insight合设的规划，请取消勾选"部署CAG门户"。');
         });
 
         test('should validate network and scene consistency', () => {

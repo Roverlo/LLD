@@ -39,10 +39,8 @@ const validateParams = (params) => {
         alerts.push('只提供终端网管与insight合设的规划，请取消勾选"部署终端网管"。');
     }
 
-    // 验证Insight和CAG门户的依赖关系
-    if (insightDeployType === '否' && deployCAGPortal) {
-        alerts.push('只提供CAG门户与insight合设的规划，请取消勾选"部署CAG门户"。');
-    }
+    // CAG门户现在独立部署，不再依赖Insight
+    // 删除了原有的Insight和CAG门户依赖关系验证
 
     // 验证网络合设和场景的一致性
     if (!isNetCombined && scene === '管理网和业务网合一场景') {

@@ -265,14 +265,7 @@ const ParamValidator = {
                 },
                 message: '只提供终端网管与insight合设的规划，已帮您修改"部署终端网管"选项为"否"，请再次点击生成。',
             },
-            {
-                condition: params.insightDeployType === '否' && params.deployCAGPortal,
-                fix: () => {
-                    Utils.setFormValue('deployCAGPortal', 'false');
-                    corrected = true;
-                },
-                message: '只提供CAG门户与insight合设的规划，已帮您修改"部署CAG门户"选项为"否"，请再次点击生成。',
-            },
+            // 删除了CAG门户与Insight的依赖关系验证，CAG门户现在可以独立部署
             {
                 condition: !params.isNetCombined && params.scene === '管理网和业务网合一场景',
                 fix: () => {

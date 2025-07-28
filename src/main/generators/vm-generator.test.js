@@ -166,24 +166,41 @@ describe('VM Generator', () => {
     });
 
     describe('generateCAGPortalVms', () => {
-        test('should generate CAG portal VM when deployCAGPortal is true', () => {
+        test('should generate CAG portal VM in non-HA mode', () => {
             const params = {
-                deployCAGPortal: true,
+                deployCAGPortal: '非高可用部署',
                 isNetCombined: false,
             };
 
             const vms = generateCAGPortalVms(params, mockIpManager);
 
             expect(vms.length).toBe(1);
-            expect(vms[0].name).toBe('CAG门户01');
-            expect(vms[0].type).toBe('CAG门户虚机');
-            expect(vms[0].purpose).toBe('CAG管理门户');
-            expect(vms[0].spec).toBe('4C8G100G');
+            expect(vms[0].name).toBe('insight_CAG门户01');
+            expect(vms[0].type).toBe('Insight虚机');
+            expect(vms[0].purpose).toBe('Insight CAG门户');
+            expect(vms[0].spec).toBe('8C16G,200GB+300GB');
         });
 
-        test('should not generate CAG portal VM when deployCAGPortal is false', () => {
+        test('should generate CAG portal VMs in HA mode', () => {
             const params = {
-                deployCAGPortal: false,
+                deployCAGPortal: '高可用部署',
+                isNetCombined: false,
+            };
+
+            const vms = generateCAGPortalVms(params, mockIpManager);
+
+            expect(vms.length).toBe(3);
+            expect(vms[0].name).toBe('insight_CAG门户01');
+            expect(vms[0].spec).toBe('8C16G,200GB+300GB');
+            expect(vms[1].name).toBe('insight_CAG门户02');
+            expect(vms[1].spec).toBe('4C8G,200GB+200GB');
+            expect(vms[2].name).toBe('insight_CAG门户03');
+            expect(vms[2].spec).toBe('4C8G,200GB+200GB');
+        });
+
+        test('should not generate CAG portal VM when deployCAGPortal is 否', () => {
+            const params = {
+                deployCAGPortal: '否',
                 isNetCombined: false,
             };
 
