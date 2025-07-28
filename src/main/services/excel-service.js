@@ -216,12 +216,16 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
             '待客户分配',
             '存储集群网：\n1.属于存储网络，负责集群网络 OSD 间通信；',
         ],
-        ['', '桌面虚机IP', desktopIpDescription, '', '', ''],  // 桌面虚机IP描述放在C列，将与D列合并
     ];
 
     // 动态添加网段行
     for (let i = 1; i <= Math.max(segmentCount, 1); i++) {
-        data.push(['', '', `待提供网段${i}`, '', '', '']);
+        if (i === 1) {
+            // 第一个网段行，在备注列添加桌面虚机描述
+            data.push(['', '桌面虚机IP', `待提供网段${i}`, '', '', desktopIpDescription]);
+        } else {
+            data.push(['', '', `待提供网段${i}`, '', '', '']);
+        }
     }
 
     // 添加数据行
@@ -236,14 +240,16 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
     worksheet.mergeCells(`A1:A${totalRows}`); // 动态合并"IP整体规划"列，根据实际行数
     // B1、C1、D1、E1、F1单元格保持独立，分别为"网络划分"、"IP段"、"IP需求"、"VLAN"、"备注"
 
-    // 合并桌面虚机IP行的C6和D6单元格，用于显示桌面虚机描述
-    worksheet.mergeCells('C6:D6'); // 合并桌面虚机IP的C6和D6单元格
-
-    // 合并B6和下面的网段行对应的B列单元格
+    // 合并网段行对应的B列和F列单元格
     if (segmentCount > 0) {
-        const startRow = 6; // B6是桌面虚机IP行
-        const endRow = startRow + segmentCount; // B6 + 网段行数
+        const startRow = 6; // 第一个网段行
+        const endRow = startRow + segmentCount - 1; // 最后一个网段行
+
+        // 合并B列（网络划分列）
         worksheet.mergeCells(`B${startRow}:B${endRow}`);
+
+        // 合并F列（备注列），用于显示桌面虚机描述
+        worksheet.mergeCells(`F${startRow}:F${endRow}`);
     }
 
     // 设置行高 - 修复A1行过高的问题
