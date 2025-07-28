@@ -274,7 +274,7 @@ describe('IP Utils', () => {
             const { ips, errors } = validateIpList('192.168.1.1;192.168.1.2;192.168.1.1;192.168.1.3;192.168.1.2');
 
             expect(ips).toEqual(['192.168.1.1', '192.168.1.2', '192.168.1.1', '192.168.1.3', '192.168.1.2']);
-            expect(errors.length).toBe(2); // 两个重复IP
+            expect(errors).toHaveLength(2); // 两个重复IP
             expect(errors.some((error) => error.includes('192.168.1.1') && error.includes('2 次'))).toBe(true);
             expect(errors.some((error) => error.includes('192.168.1.2') && error.includes('2 次'))).toBe(true);
         });
@@ -323,7 +323,7 @@ describe('IP Utils', () => {
             const result = expandRange('192.168.1.1', '192.168.1.5');
             expect(result[0]).toBe('192.168.1.1');
             expect(result[4]).toBe('192.168.1.5');
-            expect(result.length).toBe(5);
+            expect(result).toHaveLength(5);
         });
 
         test('should maintain backward compatibility', () => {

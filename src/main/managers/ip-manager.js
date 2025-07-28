@@ -2,7 +2,7 @@
  * IP地址管理器
  */
 
-const { parseIpList, validateIpList } = require('../utils/ip-utils');
+const { validateIpList } = require('../utils/ip-utils');
 const { IP_TO_BE_PROVIDED_TEXT } = require('../constants');
 
 /**

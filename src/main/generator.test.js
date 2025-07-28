@@ -99,7 +99,7 @@ describe('LLD Plan Generator', () => {
 
         // Check that dual management nodes are created
         const mngServers = plan.servers.filter((s) => s.hostname && s.hostname.includes('MNG'));
-        expect(mngServers.length).toBe(2);
+        expect(mngServers).toHaveLength(2);
     });
 
     // Test case 3: Error handling for invalid inputs
@@ -273,7 +273,7 @@ describe('LLD Plan Generator', () => {
         expect(plan.error).toBeUndefined();
 
         expect(plan).toBeDefined();
-        expect(plan.servers.length).toBe(2); // 1 management + 1 fusion
+        expect(plan.servers).toHaveLength(2); // 1 management + 1 fusion
         expect(plan.vms.length).toBeGreaterThan(0);
         expect(plan.summary.totalServers).toBe(2);
     });
