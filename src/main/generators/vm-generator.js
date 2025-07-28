@@ -139,7 +139,7 @@ const generateBaseVms = (params, ipManager) => {
  * @returns {Object[]} 虚机列表
  */
 const generateInsightVms = (params, ipManager) => {
-    const { insightDeployType, isNetCombined, userCount, deployTerminalMgmt, deployCAGPortal } = params;
+    const { insightDeployType, isNetCombined, userCount, deployTerminalMgmt } = params;
     const vms = [];
 
     if (insightDeployType === '否') {
@@ -436,51 +436,7 @@ const generateInsightNetMgmtVms = (vms, ipManager, isNetCombined, prefix, count)
     }
 };
 
-/**
- * 生成Insight CAG门户虚机
- * @param {Object[]} vms - 虚机列表
- * @param {Object} ipManager - IP管理器
- * @param {boolean} isNetCombined - 是否网络合并
- * @param {boolean} isHA - 是否高可用部署
- */
-const generateInsightCAGPortalVms = (vms, ipManager, isNetCombined, isHA) => {
-    // 主CAG门户
-    const cagPortal01 = createVmObject(
-        'insight_CAG门户01',
-        'Insight虚机',
-        'Insight CAG门户',
-        ipManager.getNextIp('management'),
-        isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
-        NOT_APPLICABLE_TEXT,
-        '8C16G,200GB+300GB'
-    );
-    vms.push(cagPortal01);
 
-    // 高可用模式下添加备用CAG门户
-    if (isHA) {
-        const cagPortal02 = createVmObject(
-            'insight_CAG门户02',
-            'Insight虚机',
-            'Insight CAG门户备用',
-            ipManager.getNextIp('management'),
-            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
-            NOT_APPLICABLE_TEXT,
-            '4C8G,200GB+200GB'
-        );
-        vms.push(cagPortal02);
-
-        const cagPortal03 = createVmObject(
-            'insight_CAG门户03',
-            'Insight虚机',
-            'Insight CAG门户备用',
-            ipManager.getNextIp('management'),
-            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business'),
-            NOT_APPLICABLE_TEXT,
-            '4C8G,200GB+200GB'
-        );
-        vms.push(cagPortal03);
-    }
-};
 
 /**
  * 生成ZXOPS相关虚机
@@ -512,11 +468,9 @@ const generateZXOPSVms = (params, ipManager) => {
 
 /**
  * 生成终端网管虚机 - 现在只通过Insight集成方式生成
- * @param {Object} params - 参数
- * @param {Object} ipManager - IP管理器
  * @returns {Object[]} 虚机列表
  */
-const generateTerminalMgmtVms = (params, ipManager) => {
+const generateTerminalMgmtVms = () => {
     // 终端网管现在只通过Insight集成方式生成，不再生成独立的终端网管虚机
     // 这个函数保留是为了保持API兼容性，但不再生成任何虚机
     return [];

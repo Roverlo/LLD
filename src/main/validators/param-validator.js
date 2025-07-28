@@ -28,7 +28,6 @@ const validateParams = (params) => {
         scene,
         insightDeployType,
         deployTerminalMgmt,
-        deployCAGPortal,
         userCount,
     } = params;
 
