@@ -1,246 +1,118 @@
 # ZTE uSmartView LLD Generator
 
-一个基于 Electron 的企业级桌面应用程序，用于自动生成云桌面 LLD（Low Level Design）规划文档。
+一个基于Electron的桌面应用程序，用于生成ZTE uSmartView低层设计文档。
 
-## 📥 快速下载
+## 功能特性
 
-[![Download Latest Release](https://img.shields.io/badge/下载最新版本-v1.0.1-blue?style=for-the-badge&logo=download)](https://github.com/Roverlo/LLD/releases/latest)
+- 🚀 基于Electron框架开发的跨平台桌面应用
+- 📊 自动生成Excel格式的LLD文档
+- 🎯 支持多种网络配置参数收集
+- 💾 绿色免安装版本，开箱即用
+- 🔧 可配置的参数验证和IP管理
 
-**🎯 一键下载，即开即用！** 无需安装Node.js、无需配置环境，下载后双击即可运行。
+## 技术栈
 
-## 🎯 项目概述
+- **框架**: Electron
+- **前端**: HTML5, CSS3, JavaScript
+- **后端**: Node.js
+- **文档生成**: ExcelJS
+- **打包工具**: electron-builder
 
-### 核心功能
-- 🚀 **智能规划生成**：根据用户需求自动计算服务器、虚机、存储配置
-- 📊 **多场景支持**：支持管理网/业务网隔离、融合部署等多种场景
-- 🔧 **IP地址管理**：智能IP分配、重复检查、范围验证
-- 📋 **专业文档输出**：生成详细的Excel规划文档，包含硬件清单
-- 🎯 **用户友好界面**：直观的图形界面，支持参数配置和实时预览
+## 项目结构
 
-### 应用场景
-- 云桌面项目前期规划设计
-- 硬件资源需求评估
-- 网络IP地址规划
-- 项目投标技术方案制作
-
-## 🏗️ 技术架构
-
-### 核心技术栈
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    技术栈组成                                │
-├─────────────────────────────────────────────────────────────┤
-│ 桌面框架：Electron 22.0.0                                   │
-│ 运行时：  Node.js                                           │
-│ 前端：    HTML5 + CSS3 + 原生JavaScript                     │
-│ 文档生成：ExcelJS 4.4.0                                     │
-│ 测试框架：Jest 29.7.0 (44个测试用例)                        │
-│ 代码质量：ESLint + Prettier                                 │
-│ 构建工具：electron-builder                                  │
-│ 包管理：  Yarn                                              │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 架构模式
-- **分层架构**：表现层、业务逻辑层、服务层、工具层清晰分离
-- **MVC变体**：主进程(Controller) + 渲染进程(View) + 业务逻辑(Model)
-- **模块化设计**：高内聚、低耦合的模块结构
-- **事件驱动**：基于IPC的进程间通信机制
-
-### 项目结构
-```
-ZTEuSmartViewLLD/
 ├── src/
-│   ├── main/                    # 主进程代码
-│   │   ├── main.js             # 应用入口
-│   │   ├── generator.js        # 核心业务逻辑
-│   │   ├── managers/           # 管理器模块
-│   │   │   └── ip-manager.js   # IP地址管理
-│   │   ├── generators/         # 生成器模块
-│   │   │   ├── server-generator.js  # 服务器规划
-│   │   │   ├── vm-generator.js      # 虚机规划
-│   │   │   └── storage-generator.js # 存储规划
-│   │   ├── services/           # 服务层
-│   │   │   ├── excel-service.js     # Excel生成
-│   │   │   └── logger.js            # 日志服务
-│   │   ├── utils/              # 工具层
-│   │   │   └── ip-utils.js          # IP处理工具
-│   │   └── validators/         # 验证器
-│   │       └── param-validator.js   # 参数验证
-│   ├── renderer/               # 渲染进程代码
-│   │   ├── index.html          # UI界面
-│   │   ├── renderer.js         # 交互逻辑
-│   │   └── style.css           # 样式文件
-│   └── preload.js              # 安全桥接脚本
-├── build/                      # 构建资源
-├── dist/                       # 打包输出
-├── coverage/                   # 测试覆盖率报告
-├── 规范文档/                   # 项目规范文档
-│   ├── CODING_STANDARDS.md     # 编码规范
-│   ├── CODING_STYLE.md         # 代码风格
-│   ├── ARCHITECTURE.md         # 架构说明
-│   └── API.md                  # API文档
-└── package.json                # 项目配置
+│   ├── main/           # 主进程代码
+│   │   ├── generators/ # 文档生成器
+│   │   ├── managers/   # 管理器模块
+│   │   ├── services/   # 服务层
+│   │   ├── utils/      # 工具函数
+│   │   └── validators/ # 参数验证
+│   ├── renderer/       # 渲染进程代码
+│   │   ├── assets/     # 静态资源
+│   │   └── modules/    # 前端模块
+│   └── __tests__/      # 测试文件
+├── build/              # 构建资源
+└── dist/               # 打包输出
 ```
 
-## 🚀 快速开始
+## 快速开始
 
-### 方式一：直接使用（推荐给普通用户）
+### 环境要求
 
-#### 选项A：下载Release版本（推荐）
-1. 访问 [GitHub Releases](https://github.com/Roverlo/LLD/releases)
-2. 下载最新版本的 `ZTEuSmartViewLLD 1.0.1.exe` (64MB)
-3. 双击运行即可使用（绿色免安装版）
+- Node.js >= 14.0.0
+- npm >= 6.0.0
 
-#### 选项B：克隆项目使用预编译版本
+### 安装依赖
+
 ```bash
-# 1. 下载项目
-git clone https://github.com/Roverlo/LLD.git
-cd LLD
-
-# 2. 使用预编译版本（无需安装依赖）
-# 方式2a: 运行绿色版（推荐）
-# 双击 dist/ZTEuSmartViewLLD 1.0.1.exe
-
-# 方式2b: 运行解压版
-# 进入 dist/win-unpacked/ 目录
-# 双击运行 ZTEuSmartViewLLD.exe
+npm install
 ```
 
-### 方式二：开发环境运行
+### 开发模式
 
-#### 环境要求
-- Node.js 16.0+
-- Yarn 1.22+
-- Windows 7/8/10/11 (64位)
-
-#### 安装与运行
 ```bash
-# 1. 克隆项目
-git clone https://github.com/Roverlo/LLD.git
-cd LLD
-
-# 2. 安装依赖
-yarn install
-
-# 3. 启动开发模式
-yarn start
-
-# 4. 运行测试
-yarn test
-
-# 5. 代码检查
-yarn lint
-
-# 6. 代码格式化
-yarn format
-
-# 7. 打包应用
-yarn dist
+npm start
 ```
 
-### 生产部署
+### 构建应用
+
 ```bash
-# 打包绿色免安装版
-yarn dist
-
-# 生成的文件位于 dist/ 目录
-# ZTEuSmartViewLLD 1.0.1.exe - 绿色免安装版 (64MB)
-# win-unpacked/ - 解压版本 (~200MB)
+# 构建绿色免安装版本
+npm run dist
 ```
 
-### 📦 下载选项
+构建完成后，可执行文件位于 `dist/` 目录下。
 
-| 下载方式 | 文件大小 | 适用人群 | 说明 |
-|----------|----------|----------|------|
-| **Release版本** | 64MB | 普通用户 | 从GitHub Releases直接下载exe |
-| **完整项目** | ~400MB | 开发者 | 包含源码、依赖、构建文件 |
-| **解压版** | ~200MB | 高级用户 | win-unpacked目录，可查看文件结构 |
+## 使用说明
 
-## 📋 功能特性
+1. 启动应用程序
+2. 填写网络配置参数
+3. 选择生成选项
+4. 点击生成按钮
+5. 导出Excel文档
 
-### IP地址管理
-- **多格式支持**：单IP、IP范围、CIDR、混合分隔
-- **智能验证**：反向范围检测、重复IP检查、格式验证
-- **错误提示**：详细的错误信息和修正建议
+详细使用说明请参考 `使用说明.txt` 文件。
 
-### 规划生成
-- **服务器规划**：自动分配IP、计算硬件需求
-- **虚机规划**：根据场景动态生成虚机配置
-- **存储规划**：Ceph集群规划、存储池配置
-
-### 文档输出
-- **Excel格式**：专业的Excel文档输出
-- **多工作表**：服务器、虚机、存储分别展示
-- **格式美观**：表格样式、颜色标识、数据验证
-
-## 🧪 测试与质量
-
-### 测试覆盖
-- **单元测试**：44个测试用例，覆盖核心功能
-- **集成测试**：端到端功能验证
-- **错误处理测试**：异常情况处理验证
-
-### 代码质量
-- **ESLint**：代码规范检查
-- **Prettier**：代码格式化
-- **Jest**：测试框架
-- **覆盖率报告**：详细的测试覆盖率分析
-
-## 📖 使用说明
-
-### 🚀 快速上手
-1. **获取应用**：
-   - **推荐**：从 [GitHub Releases](https://github.com/Roverlo/LLD/releases) 下载最新版本
-   - **备选**：克隆项目后使用 `dist/ZTEuSmartViewLLD 1.0.1.exe`
-
-2. **启动应用**：
-   - 双击 `ZTEuSmartViewLLD 1.0.1.exe` 文件
-   - 无需安装，绿色软件，即开即用
-
-### 基本操作
-1. **配置参数**：填写用户数量、场景选择、服务器配置
-2. **设置IP段**：配置各网络的IP地址范围
-3. **生成文档**：点击"生成Excel"按钮
-4. **查看结果**：Excel文件自动保存到下载目录
-
-### IP配置示例
-```
-管理网IP段：192.168.1.10-192.168.1.100
-业务网IP段：192.168.2.0/24;192.168.3.1-50
-存储公共网：10.0.1.1-10.0.1.200
-存储集群网：10.0.2.0/24
-```
-
-## 🔧 开发指南
+## 开发指南
 
 ### 代码规范
-- 遵循ESLint配置的代码规范
-- 使用Prettier进行代码格式化
-- 编写单元测试覆盖新功能
-- 遵循模块化设计原则
 
-### 架构原则
-- **单一职责**：每个模块职责明确
-- **依赖注入**：通过参数传递依赖
-- **错误处理**：完善的错误捕获和处理
-- **日志记录**：详细的操作日志
+项目使用ESLint和Prettier进行代码格式化：
 
-## 📄 许可证
+```bash
+# 代码检查
+npm run lint
 
-版权所有 © 2025 中兴通讯股份有限公司
-仅供内部使用，请勿外传
+# 代码格式化
+npm run format
+```
 
-## 🤝 贡献指南
+### 测试
 
-1. 阅读CODING_STANDARDS.md了解编码规范
-2. 创建功能分支进行开发
-3. 编写测试用例验证功能
-4. 提交前运行yarn quality:check
-5. 提交Pull Request进行代码审查
+```bash
+# 运行测试
+npm test
 
-## 📞 技术支持
+# 生成测试覆盖率报告
+npm run test:coverage
+```
 
-- **开发团队**：ZTE uSmartView Team
-- **邮箱**：dev@zte.com.cn
-- **文档**：查看docs/目录下的详细文档
+## 版本历史
+
+- **v1.0.2** - 当前版本
+  - 优化用户界面
+  - 修复已知问题
+  - 添加新的配置选项
+
+## 许可证
+
+本项目仅供内部使用。
+
+## 贡献
+
+欢迎提交Issue和Pull Request来改进项目。
+
+## 联系方式
+
+如有问题或建议，请联系开发团队。
