@@ -83,9 +83,6 @@ const applyWorksheetStyles = (worksheet, headerRow, maxColumns) => {
             });
         }
     });
-
-    // 设置列宽
-    setColumnWidths(worksheet, maxColumns);
 };
 
 /**
@@ -126,16 +123,28 @@ const formatIpRangeDisplay = (ipRange) => {
     }
 
     // 统一格式：去掉多余空格，标准化分隔符
-    return ipRange.trim()
-        .replace(/\s+/g, ' ')  // 多个空格替换为单个空格
-        .replace(/，/g, ',')   // 中文逗号替换为英文逗号
-        .replace(/；/g, ';')   // 中文分号替换为英文分号
-        .replace(/\s*,\s*/g, ', ')  // 逗号前后统一空格
+    return ipRange
+        .trim()
+        .replace(/\s+/g, ' ') // 多个空格替换为单个空格
+        .replace(/，/g, ',') // 中文逗号替换为英文逗号
+        .replace(/；/g, ';') // 中文分号替换为英文分号
+        .replace(/\s*,\s*/g, ', ') // 逗号前后统一空格
         .replace(/\s*;\s*/g, '; '); // 分号前后统一空格
 };
 
-const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUsage = null, ipRanges = null) => {
+const createIpPlanWorksheet = (
+    workbook,
+    servers,
+    vms,
+    desktopVmTypes = [],
+    ipUsage = null,
+    ipRanges = null,
+    params = {}
+) => {
     const worksheet = workbook.addWorksheet('IP整体规划');
+
+    // 从参数中获取绑定模式，处理null/undefined情况
+    const { mngBondMode = '待配置', bizBondMode = '待配置', storBondMode = '待配置' } = params || {};
 
     // 统计各类IP数量
     const ipStats = {
@@ -147,7 +156,7 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
     };
 
     // 统计服务器IP（排除"不涉及"的IP）
-    servers.forEach((server) => {
+    (servers || []).forEach((server) => {
         if (server.mngIp && server.mngIp !== '待分配' && server.mngIp !== '不涉及') ipStats.mngIpCount++;
         if (server.bizIp && server.bizIp !== '待分配' && server.bizIp !== '不涉及') ipStats.bizIpCount++;
         if (server.pubIp && server.pubIp !== '待分配' && server.pubIp !== '不涉及') ipStats.pubIpCount++;
@@ -155,7 +164,7 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
     });
 
     // 统计虚机IP（包含在管理网和业务网计数中，排除"不涉及"的IP）
-    vms.forEach((vm) => {
+    (vms || []).forEach((vm) => {
         if (vm.mngIp && vm.mngIp !== '待分配' && vm.mngIp !== '不涉及') {
             ipStats.mngIpCount++; // 虚机管理网IP计入管理网总数
         }
@@ -165,7 +174,7 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
     });
 
     // 计算桌面虚机IP需求
-    const totalDesktopVms = desktopVmTypes.reduce((sum, vmType) => sum + vmType.count, 0);
+    const totalDesktopVms = (desktopVmTypes || []).reduce((sum, vmType) => sum + vmType.count, 0);
     const segmentCount = Math.ceil(totalDesktopVms / 230); // 每个网段230个IP
     const desktopIpDescription = `待提供，共需${totalDesktopVms}个，即${segmentCount}个网段（每个段预留前10个及后15个IP，可用IP按230个计算）`;
 
@@ -183,37 +192,41 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
 
     // 设置表格结构（在B列和C列之间添加IP段列，保留IP状态描述）
     const data = [
-        ['IP整体规划', '网络划分', 'IP段', 'IP需求', 'VLAN', '备注'],
+        ['IP整体规划', '网络划分', 'IP段', 'IP需求', 'VLAN', '网络绑定模式', '备注'],
         [
             '',
             '管理网IP',
-            mngIpRange,  // 用户填写的IP段，如：192.168.1.10-192.168.1.100
-            mngIpDescription,  // IP状态描述，如：共需29个IP，已提供91个IP，IP充足
+            mngIpRange,
+            mngIpDescription,
             '待客户分配',
+            mngBondMode, // 管理网绑定模式
             '管理网：\n1.负责云桌面管理节点与计算节点，CEPH 管理节点与存储节点之间的通信',
         ],
         [
             '',
             '业务网IP',
-            bizIpRange,  // 用户填写的IP段，如：192.168.2.10-192.168.2.100
-            bizIpDescription,  // IP状态描述
+            bizIpRange,
+            bizIpDescription,
             '待客户分配',
-            '业务网：\n1.云桌面虚拟机通信网络；'
+            bizBondMode, // 业务网绑定模式
+            '业务网：\n1.云桌面虚拟机通信网络；',
         ],
         [
             '',
             '物理机存储公共网IP',
-            pubIpRange,  // 用户填写的IP段，如：192.168.3.10-192.168.3.100
-            pubIpDescription,  // IP状态描述
+            pubIpRange,
+            pubIpDescription,
             '待客户分配',
+            storBondMode, // 存储网绑定模式
             '存储公共网：\n1.属于存储网络，负责客户端与CEPH 存储集群、MON 与 MON 间、MON 与 OSD 间的通信；',
         ],
         [
             '',
             '物理机存储集群网IP',
-            cluIpRange,  // 用户填写的IP段，如：192.168.4.10-192.168.4.100
-            cluIpDescription,  // IP状态描述
+            cluIpRange,
+            cluIpDescription,
             '待客户分配',
+            storBondMode, // 存储网绑定模式
             '存储集群网：\n1.属于存储网络，负责集群网络 OSD 间通信；',
         ],
     ];
@@ -222,9 +235,9 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
     for (let i = 1; i <= Math.max(segmentCount, 1); i++) {
         if (i === 1) {
             // 第一个网段行，在备注列添加桌面虚机描述
-            data.push(['', '桌面虚机IP', `待提供网段${i}`, '', '', desktopIpDescription]);
+            data.push(['', '桌面虚机IP', `待提供网段${i}`, '', '', '', desktopIpDescription]);
         } else {
-            data.push(['', '', `待提供网段${i}`, '', '', '']);
+            data.push(['', '', `待提供网段${i}`, '', '', '', '']);
         }
     }
 
@@ -241,15 +254,15 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
     // B1、C1、D1、E1、F1单元格保持独立，分别为"网络划分"、"IP段"、"IP需求"、"VLAN"、"备注"
 
     // 合并网段行对应的B列和F列单元格
-    if (segmentCount > 0) {
+    if (segmentCount > 1) {
         const startRow = 6; // 第一个网段行
         const endRow = startRow + segmentCount - 1; // 最后一个网段行
 
         // 合并B列（网络划分列）
         worksheet.mergeCells(`B${startRow}:B${endRow}`);
 
-        // 合并F列（备注列），用于显示桌面虚机描述
-        worksheet.mergeCells(`F${startRow}:F${endRow}`);
+        // 合并G列（备注列），用于显示桌面虚机描述
+        worksheet.mergeCells(`G${startRow}:G${endRow}`);
     }
 
     // 设置行高 - 修复A1行过高的问题
@@ -266,7 +279,8 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
     worksheet.getColumn(3).width = 35;
     worksheet.getColumn(4).width = 10;
     worksheet.getColumn(5).width = 15;
-    worksheet.getColumn(6).width = 40;
+    worksheet.getColumn(6).width = 20; // 新增：网络绑定模式
+    worksheet.getColumn(7).width = 40; // 备注
 
     // 应用样式
     worksheet.eachRow((row, rowNumber) => {
@@ -291,9 +305,9 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
                     cell.fill = {
                         type: 'pattern',
                         pattern: 'solid',
-                        fgColor: { argb: 'FF1F4E79' } // 深蓝色背景
+                        fgColor: { argb: 'FF1F4E79' }, // 深蓝色背景
                     };
-                } else if (colNumber >= 2 && colNumber <= 6) {
+                } else if (colNumber >= 2 && colNumber <= 7) {
                     // 其他表头：统一样式，12号加粗字体，居中对齐，浅蓝背景
                     cell.alignment = {
                         horizontal: 'center',
@@ -304,7 +318,7 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
                     cell.fill = {
                         type: 'pattern',
                         pattern: 'solid',
-                        fgColor: { argb: 'FFD9E2F3' } // 浅蓝色背景
+                        fgColor: { argb: 'FFD9E2F3' }, // 浅蓝色背景
                     };
                 }
             }
@@ -337,33 +351,287 @@ const createIpPlanWorksheet = (workbook, servers, vms, desktopVmTypes = [], ipUs
 };
 
 /**
+ * 创建服务器及桌面规格工作表
+ * @param {Object} workbook - 工作簿
+ * @param {Object[]} servers - 服务器列表
+ * @param {Object} params - 参数配置
+ */
+const createServerPerformanceWorksheet = (workbook, servers, params) => {
+    const worksheet = workbook.addWorksheet('服务器及桌面规格');
+
+    // 设置标题行
+    const headers = [
+        '类型',
+        '数量',
+        'CPU核数/台',
+        '内存(GB)/台',
+        '总CPU核数',
+        '总内存(GB)',
+        '存储配置',
+        '网络配置',
+        '性能评估',
+        '备注',
+    ];
+    worksheet.addRow(headers);
+
+    // 应用标题行样式
+    const headerRow = worksheet.getRow(1);
+    headerRow.eachCell((cell) => {
+        cell.style = EXCEL_STYLES.header;
+    });
+
+    // 统计不同类型服务器的数量和配置
+    const serverStats = {};
+    (servers || []).forEach((server) => {
+        // 角色名称映射：英文到中文
+        const roleMapping = {
+            management: '管理服务器',
+            compute: '计算（超融合）服务器',
+            storage: '存储服务器',
+            管理服务器: '管理服务器',
+            '计算（超融合）服务器': '计算（超融合）服务器',
+            存储服务器: '存储服务器',
+        };
+
+        const type = roleMapping[server.role] || server.role;
+        if (!serverStats[type]) {
+            serverStats[type] = {
+                count: 0,
+                cpuCores: 0,
+                memory: 0,
+                storage: '',
+                network: '',
+            };
+        }
+        serverStats[type].count++;
+    });
+
+    // 从参数中获取服务器配置信息
+    const safeParams = params || {};
+    const mgmtConfig = {
+        cpuCores: safeParams.mngCpuCores || 32,
+        memory: safeParams.mngMemory || 128,
+        ssd: safeParams.mngSsdCount || 2,
+        ssdSpec: safeParams.mngSsdSpec || '1.92',
+        hdd: safeParams.mngHddCount || 4,
+        hddSpec: safeParams.mngHddSpec || '8',
+    };
+    const compConfig = {
+        cpuCores: safeParams.isFusionNode ? (safeParams.fusionCpuCores || 64) : (safeParams.calcCpuCores || 64),
+        memory: safeParams.isFusionNode ? (safeParams.fusionMemory || 256) : (safeParams.calcMemory || 256),
+        ssd: safeParams.isFusionNode ? (safeParams.fusionSsdCount || 2) : (safeParams.calcSsdCount || 2),
+        ssdSpec: safeParams.isFusionNode ? (safeParams.fusionSsdSpec || '1.92') : (safeParams.calcSsdSpec || '1.92'),
+        hdd: safeParams.isFusionNode ? (safeParams.fusionHddCount || 4) : (safeParams.calcHddCount || 4),
+        hddSpec: safeParams.isFusionNode ? (safeParams.fusionHddSpec || '8') : (safeParams.calcHddSpec || '8'),
+    };
+    const storConfig = {
+        cpuCores: safeParams.storCpuCores || 32,
+        memory: safeParams.storMemory || 128,
+        ssd: safeParams.storSsdCount || 2,
+        ssdSpec: safeParams.storSsdSpec || '1.92',
+        hdd: safeParams.storHddCount || 4,
+        hddSpec: safeParams.storHddSpec || '8',
+    };
+
+    // 添加数据行 - 服务器部分
+    const serverTypes = [];
+    
+    // 管理服务器
+    const mgmtCount = safeParams.countMng || 0;
+    if (mgmtCount > 0) {
+        serverTypes.push({
+            type: '管理服务器',
+            count: mgmtCount,
+            config: mgmtConfig,
+            performance: '负责集群管理、监控等功能',
+        });
+    }
+    
+    // 计算（超融合）服务器
+    const compCount = safeParams.isFusionNode ? (safeParams.countFusion || 0) : (safeParams.countCalc || 0);
+    if (compCount > 0) {
+        const compType = safeParams.isFusionNode ? '超融合服务器' : '计算服务器';
+        const compPerformance = safeParams.isFusionNode ? '提供计算资源和存储服务' : '提供计算资源';
+        serverTypes.push({
+            type: compType,
+            count: compCount,
+            config: compConfig,
+            performance: compPerformance,
+        });
+    }
+    
+    // 存储服务器
+    const storCount = safeParams.countStor || 0;
+    if (storCount > 0) {
+        serverTypes.push({
+            type: '存储服务器',
+            count: storCount,
+            config: storConfig,
+            performance: '提供分布式存储服务',
+        });
+    }
+
+    serverTypes.forEach((serverType) => {
+        if (serverType.count > 0) {
+            const config = serverType.config;
+            const totalCpu = serverType.count * config.cpuCores;
+            const totalMemory = serverType.count * config.memory;
+
+            let storageConfig = '';
+            if (config.ssd > 0) {
+                storageConfig += `SSD: ${config.ssd}块×${config.ssdSpec}TB`;
+            }
+            if (config.hdd > 0) {
+                if (storageConfig) storageConfig += ', ';
+                storageConfig += `HDD: ${config.hdd}块×${config.hddSpec}TB`;
+            }
+            if (!storageConfig) {
+                storageConfig = '无';
+            }
+
+            const networkConfig = '千兆/万兆以太网';
+
+            worksheet.addRow([
+                serverType.type,
+                serverType.count,
+                config.cpuCores,
+                config.memory,
+                totalCpu,
+                totalMemory,
+                storageConfig,
+                networkConfig,
+                serverType.performance,
+                '',
+            ]);
+        }
+    });
+
+    // 添加桌面虚机规格部分
+    const desktopVmTypes = safeParams.desktopVmTypes || [];
+    if (desktopVmTypes.length > 0) {
+        // 添加空行分隔
+        worksheet.addRow([]);
+        
+        // 添加桌面虚机标题行
+        const vmHeaderRow = worksheet.addRow(['桌面虚机规格', '', '', '', '', '', '', '', '', '']);
+        vmHeaderRow.getCell(1).style = {
+            ...EXCEL_STYLES.header,
+            font: { ...EXCEL_STYLES.header.font, bold: true, size: 12 }
+        };
+        
+        // 合并桌面虚机标题行
+        worksheet.mergeCells(vmHeaderRow.number, 1, vmHeaderRow.number, 10);
+        
+        // 添加桌面虚机数据
+        desktopVmTypes.forEach((vmType) => {
+            const totalCpu = vmType.count * vmType.cpu;
+            const totalMemory = vmType.count * vmType.memory;
+            const totalStorage = vmType.count * vmType.storage;
+            
+            worksheet.addRow([
+                `桌面虚机类型${vmType.type}`,
+                vmType.count,
+                vmType.cpu,
+                vmType.memory,
+                totalCpu,
+                totalMemory,
+                `系统盘: ${vmType.storage}GB`,
+                '千兆以太网',
+                '提供桌面虚拟化服务',
+                `总存储需求: ${totalStorage}GB`,
+            ]);
+        });
+    }
+
+    // 设置列宽
+    worksheet.columns = [
+        { width: 20 }, // 服务器类型
+        { width: 8 }, // 数量
+        { width: 12 }, // CPU核数/台
+        { width: 12 }, // 内存(GB)/台
+        { width: 12 }, // 总CPU核数
+        { width: 12 }, // 总内存(GB)
+        { width: 25 }, // 存储配置
+        { width: 15 }, // 网络配置
+        { width: 25 }, // 性能评估
+        { width: 15 }, // 备注
+    ];
+
+    // 应用数据行样式
+    for (let i = 2; i <= worksheet.rowCount; i++) {
+        const row = worksheet.getRow(i);
+        row.eachCell((cell) => {
+            cell.style = EXCEL_STYLES.cell;
+        });
+    }
+
+    return worksheet;
+};
+
+/**
  * 创建服务器规划工作表
  * @param {Object} workbook - 工作簿
  * @param {Object[]} servers - 服务器列表
  */
-const createServerWorksheet = (workbook, servers) => {
-    const worksheet = workbook.addWorksheet('物理服务器规划');
+const createServerWorksheet = (workbook, servers, params) => {
+    const worksheet = workbook.addWorksheet('物理服务器IP');
 
     // 设置标题行
-    const headers = ['主机名', '角色', '管理网IP', '业务网IP', '存储公共网IP', '存储集群网IP'];
+    const headers = [
+        '主机名',
+        '角色',
+        '管理网级联端口名',
+        '管理网级联网卡',
+        '管理网IP',
+        '业务网级联端口名',
+        '业务网级联网卡',
+        '业务网IP',
+        '存储网级联端口名',
+        '存储网级联网卡',
+        '存储公共网IP',
+        '存储集群网IP',
+    ];
     worksheet.addRow(headers);
 
+    // 动态获取列索引
+    const columnIndexes = {};
+    worksheet.getRow(1).eachCell((cell, colNumber) => {
+        columnIndexes[cell.value] = colNumber;
+    });
+
     // 添加数据行
-    servers.forEach((server, index) => {
+    (servers || []).forEach((server, index) => {
         const rowIndex = index + 2; // 数据行从第2行开始
-        worksheet.addRow([server.hostname, server.role, server.mngIp, server.bizIp, server.pubIp, server.cluIp]);
+        const isFloatingIp = server.isFloatingIp || server.role.includes('浮动IP') || server.role.includes('浮动');
+
+        worksheet.addRow([
+            server.hostname,
+            server.role,
+            isFloatingIp ? '不涉及' : params?.mngBondName || '待配置',
+            isFloatingIp ? '不涉及' : params?.mngBondNics || '待配置',
+            server.mngIp,
+            isFloatingIp ? '不涉及' : params?.bizBondName || '待配置',
+            isFloatingIp ? '不涉及' : params?.bizBondNics || '待配置',
+            server.bizIp,
+            isFloatingIp ? '不涉及' : params?.storBondName || '待配置',
+            isFloatingIp ? '不涉及' : params?.storBondNics || '待配置',
+            server.pubIp,
+            server.cluIp,
+        ]);
 
         // 为浮动IP服务器的存储网单元格添加特殊格式
         if (server.role.includes('浮动IP') || server.role.includes('浮动')) {
-            // 存储公共网IP列（第5列）
-            const pubCell = worksheet.getCell(rowIndex, 5);
+            const pubIpCol = columnIndexes['存储公共网IP'];
+            const cluIpCol = columnIndexes['存储集群网IP'];
+
+            // 存储公共网IP列
+            const pubCell = worksheet.getCell(rowIndex, pubIpCol);
             if (server.pubIp !== '不涉及') {
                 pubCell.fill = {
                     type: 'pattern',
                     pattern: 'solid',
                     fgColor: { argb: 'FF565656' }, // #565656
                 };
-                // 添加斜对角线边框
                 pubCell.border = {
                     top: { style: 'thin' },
                     left: { style: 'thin' },
@@ -373,15 +641,14 @@ const createServerWorksheet = (workbook, servers) => {
                 };
             }
 
-            // 存储集群网IP列（第6列）
-            const cluCell = worksheet.getCell(rowIndex, 6);
+            // 存储集群网IP列
+            const cluCell = worksheet.getCell(rowIndex, cluIpCol);
             if (server.cluIp !== '不涉及') {
                 cluCell.fill = {
                     type: 'pattern',
                     pattern: 'solid',
                     fgColor: { argb: 'FF565656' }, // #565656
                 };
-                // 添加斜对角线边框
                 cluCell.border = {
                     top: { style: 'thin' },
                     left: { style: 'thin' },
@@ -391,26 +658,15 @@ const createServerWorksheet = (workbook, servers) => {
                 };
             }
 
-            // 在右侧G到M列合并单元格并添加注释
-            const commentStartCol = 7; // G列
-            const commentEndCol = 13; // M列
+            // 在右侧合并单元格并添加注释
+            const commentStartCol = headers.length + 1; // 从最后一列的下一列开始
+            const commentEndCol = commentStartCol + 6; // 合并7列
 
-            // 合并G到M列的单元格
             worksheet.mergeCells(rowIndex, commentStartCol, rowIndex, commentEndCol);
-
-            // 在合并的单元格中添加注释
             const commentCell = worksheet.getCell(rowIndex, commentStartCol);
             commentCell.value = '浮动地址不涉及存储网，如此分配仅为保持计算节点的管理网业务网存储网IP对齐';
-            commentCell.alignment = {
-                horizontal: 'left', // 水平左对齐
-                vertical: 'middle', // 垂直居中
-                wrapText: true,
-                indent: 1, // 添加一点缩进确保左对齐效果
-            };
-            commentCell.font = {
-                size: 10,
-                color: { argb: 'FF666666' }, // 灰色字体
-            };
+            commentCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true, indent: 1 };
+            commentCell.font = { size: 10, color: { argb: 'FF666666' } };
             commentCell.border = {
                 top: { style: 'thin' },
                 left: { style: 'thin' },
@@ -419,31 +675,24 @@ const createServerWorksheet = (workbook, servers) => {
             };
         }
 
-        // 为"待提供IP"单元格添加蓝色背景（排除浮动IP的存储网单元格）
-        const isFloatingIp = server.role.includes('浮动IP') || server.role.includes('浮动');
+        // 为"待提供IP"单元格添加蓝色背景
+        const isFloatingIpForIpCheck =
+            server.isFloatingIp || server.role.includes('浮动IP') || server.role.includes('浮动');
+        const ipColumns = {
+            管理网IP: server.mngIp,
+            业务网IP: server.bizIp,
+            存储公共网IP: isFloatingIpForIpCheck ? null : server.pubIp,
+            存储集群网IP: isFloatingIpForIpCheck ? null : server.cluIp,
+        };
 
-        // 管理网IP列（第3列）
-        if (server.mngIp === IP_TO_BE_PROVIDED_TEXT) {
-            const cell = worksheet.getCell(rowIndex, 3);
-            Object.assign(cell, EXCEL_STYLES.ipToBeProvieded);
-        }
-
-        // 业务网IP列（第4列）
-        if (server.bizIp === IP_TO_BE_PROVIDED_TEXT) {
-            const cell = worksheet.getCell(rowIndex, 4);
-            Object.assign(cell, EXCEL_STYLES.ipToBeProvieded);
-        }
-
-        // 存储公共网IP列（第5列）- 排除浮动IP的存储网
-        if (server.pubIp === IP_TO_BE_PROVIDED_TEXT && !isFloatingIp) {
-            const cell = worksheet.getCell(rowIndex, 5);
-            Object.assign(cell, EXCEL_STYLES.ipToBeProvieded);
-        }
-
-        // 存储集群网IP列（第6列）- 排除浮动IP的存储网
-        if (server.cluIp === IP_TO_BE_PROVIDED_TEXT && !isFloatingIp) {
-            const cell = worksheet.getCell(rowIndex, 6);
-            Object.assign(cell, EXCEL_STYLES.ipToBeProvieded);
+        for (const [colName, ipValue] of Object.entries(ipColumns)) {
+            if (ipValue === IP_TO_BE_PROVIDED_TEXT) {
+                const colIndex = columnIndexes[colName];
+                if (colIndex) {
+                    const cell = worksheet.getCell(rowIndex, colIndex);
+                    Object.assign(cell, EXCEL_STYLES.ipToBeProvieded);
+                }
+            }
         }
     });
 
@@ -459,14 +708,14 @@ const createServerWorksheet = (workbook, servers) => {
  * @param {Object[]} vms - 虚机列表
  */
 const createVmWorksheet = (workbook, vms) => {
-    const worksheet = workbook.addWorksheet('功能虚机规划');
+    const worksheet = workbook.addWorksheet('功能虚机IP');
 
     // 设置标题行 - 去掉"类型"列
     const headers = ['虚机名称', '管理网IP', '业务网IP', 'CAG管理地址', '规格'];
     worksheet.addRow(headers);
 
     // 对虚机进行排序：insight系列虚机排在最下面
-    const sortedVms = [...vms].sort((a, b) => {
+    const sortedVms = [...(vms || [])].sort((a, b) => {
         const aIsInsight = a.name.toLowerCase().includes('insight');
         const bIsInsight = b.name.toLowerCase().includes('insight');
 
@@ -515,24 +764,24 @@ const createVmWorksheet = (workbook, vms) => {
  * @param {Object} params - 参数对象
  */
 const createStorageWorksheet = (workbook, params) => {
-    const worksheet = workbook.addWorksheet('存储规划');
+    const worksheet = workbook.addWorksheet('存储');
 
     const {
-        isFusionNode,
-        isMngAsFusion,
-        countMng,
-        countFusion,
-        countStor,
-        isCephDual,
-        storageSecurity,
-        ssdCount,
-        ssdSpec,
-        hddCount,
-        hddSpec,
-        cpuCores,
-        memorySize,
+        isFusionNode = false,
+        isMngAsFusion = false,
+        countMng = 0,
+        countFusion = 0,
+        countStor = 0,
+        isCephDual = false,
+        storageSecurity = 'replica',
+        ssdCount = 0,
+        ssdSpec = '1TB',
+        hddCount = 0,
+        hddSpec = '2TB',
+        cpuCores = 32,
+        memorySize = 128,
         osdReservedSize = 0,
-    } = params;
+    } = params || {};
 
     let currentRow = 1;
 
@@ -704,6 +953,114 @@ const createStorageWorksheet = (workbook, params) => {
 };
 
 /**
+ * 创建端口规划（服务器）工作表
+ * @param {Object} workbook - 工作簿
+ */
+const createServerPortPlanWorksheet = (workbook) => {
+    const worksheet = workbook.addWorksheet('端口规划（服务器）');
+
+    // 设置标题行
+    const headers = [
+        '序号',
+        '机柜位置',
+        '设备U位',
+        '型号',
+        '接口类型',
+        '物理接口名称',
+        '逻辑端口名',
+        '交换机机柜',
+        '交换机U位',
+        '交换机端',
+        '设备名称',
+    ];
+    worksheet.addRow(headers);
+
+    // 应用样式
+    const headerRow = worksheet.getRow(1);
+    headerRow.eachCell((cell) => {
+        cell.style = EXCEL_STYLES.header;
+    });
+
+    // 设置列宽
+    worksheet.columns = [
+        { width: 8 }, // 序号
+        { width: 12 }, // 机柜位置
+        { width: 10 }, // 设备U位
+        { width: 15 }, // 型号
+        { width: 12 }, // 接口类型
+        { width: 18 }, // 物理接口名称
+        { width: 15 }, // 逻辑端口名
+        { width: 12 }, // 交换机机柜
+        { width: 12 }, // 交换机U位
+        { width: 12 }, // 交换机端
+        { width: 15 }, // 设备名称
+    ];
+
+    return worksheet;
+};
+
+/**
+ * 创建端口规划（网络设备）工作表
+ * @param {Object} workbook - 工作簿
+ */
+const createNetworkPortPlanWorksheet = (workbook) => {
+    const worksheet = workbook.addWorksheet('端口规划（网络设备）');
+
+    // 设置标题行
+    const headers = ['本端设备名称', '本端设备端口', '对端设备端口', '本端设备名称', '本端设备端口', '对端设备端口'];
+    worksheet.addRow(headers);
+
+    // 应用样式
+    const headerRow = worksheet.getRow(1);
+    headerRow.eachCell((cell) => {
+        cell.style = EXCEL_STYLES.header;
+    });
+
+    // 设置列宽
+    worksheet.columns = [
+        { width: 18 }, // 本端设备名称
+        { width: 18 }, // 本端设备端口
+        { width: 18 }, // 对端设备端口
+        { width: 18 }, // 本端设备名称
+        { width: 18 }, // 本端设备端口
+        { width: 18 }, // 对端设备端口
+    ];
+
+    return worksheet;
+};
+
+/**
+ * 创建网络策略工作表
+ * @param {Object} workbook - 工作簿
+ */
+const createNetworkPolicyWorksheet = (workbook) => {
+    const worksheet = workbook.addWorksheet('网络策略');
+
+    // 设置标题行（可以根据需要调整）
+    const headers = ['策略名称', '源地址', '目标地址', '协议', '端口', '动作', '备注'];
+    worksheet.addRow(headers);
+
+    // 应用样式
+    const headerRow = worksheet.getRow(1);
+    headerRow.eachCell((cell) => {
+        cell.style = EXCEL_STYLES.header;
+    });
+
+    // 设置列宽
+    worksheet.columns = [
+        { width: 15 }, // 策略名称
+        { width: 18 }, // 源地址
+        { width: 18 }, // 目标地址
+        { width: 10 }, // 协议
+        { width: 12 }, // 端口
+        { width: 10 }, // 动作
+        { width: 20 }, // 备注
+    ];
+
+    return worksheet;
+};
+
+/**
  * 生成Excel文件
  * @param {Object} plan - 规划数据
  * @param {Object} mainWindow - 主窗口对象
@@ -711,22 +1068,47 @@ const createStorageWorksheet = (workbook, params) => {
  */
 const generateExcelFile = async (plan, mainWindow) => {
     try {
+        console.log('generateExcelFile started');
         // 创建工作簿
         const workbook = new ExcelJS.Workbook();
         workbook.creator = 'ZTE uSmartView LLD Generator';
         workbook.created = new Date();
+        console.log('workbook created');
 
         // 创建工作表（IP总体规划放在最前面）
+        const parameters = plan.metadata?.parameters || {};
         const ipRanges = {
-            mngIpRange: plan.metadata?.parameters?.mngIpRange,
-            bizIpRange: plan.metadata?.parameters?.bizIpRange,
-            pubIpRange: plan.metadata?.parameters?.pubIpRange,
-            cluIpRange: plan.metadata?.parameters?.cluIpRange,
+            mngIpRange: parameters.mngIpRange,
+            bizIpRange: parameters.bizIpRange,
+            pubIpRange: parameters.pubIpRange,
+            cluIpRange: parameters.cluIpRange,
         };
-        createIpPlanWorksheet(workbook, plan.servers, plan.vms, plan.desktopVmTypes, plan.summary?.ipUsage, ipRanges);
-        createServerWorksheet(workbook, plan.servers);
+
+        console.log('creating worksheets');
+        createIpPlanWorksheet(
+            workbook,
+            plan.servers,
+            plan.vms,
+            plan.desktopVmTypes,
+            plan.summary?.ipUsage,
+            ipRanges,
+            parameters
+        );
+        console.log('createIpPlanWorksheet done');
+        createServerPerformanceWorksheet(workbook, plan.servers, parameters);
+        console.log('createServerPerformanceWorksheet done');
+        createServerWorksheet(workbook, plan.servers, parameters);
+        console.log('createServerWorksheet done');
         createVmWorksheet(workbook, plan.vms);
-        createStorageWorksheet(workbook, plan.metadata.parameters); // 传递参数而不是storagePlan
+        console.log('createVmWorksheet done');
+        createStorageWorksheet(workbook, parameters); // 传递参数而不是storagePlan
+        console.log('createStorageWorksheet done');
+
+        // 创建新增的3个sheet页
+        createServerPortPlanWorksheet(workbook);
+        createNetworkPortPlanWorksheet(workbook);
+        createNetworkPolicyWorksheet(workbook);
+        console.log('all worksheets created');
 
         // 生成详细的时间戳（使用上海时区）
         const now = new Date();
@@ -767,6 +1149,7 @@ const generateExcelFile = async (plan, mainWindow) => {
             message: '文件保存成功',
         };
     } catch (error) {
+        console.error('generateExcelFile catch block:', error);
         return {
             success: false,
             error: error.message,
@@ -778,9 +1161,13 @@ const generateExcelFile = async (plan, mainWindow) => {
 module.exports = {
     generateExcelFile,
     createIpPlanWorksheet,
+    createServerPerformanceWorksheet,
     createServerWorksheet,
     createVmWorksheet,
     createStorageWorksheet,
+    createServerPortPlanWorksheet,
+    createNetworkPortPlanWorksheet,
+    createNetworkPolicyWorksheet,
     generateIpStatusDescription, // 导出用于测试
     formatIpRangeDisplay, // 导出用于测试
     EXCEL_STYLES,

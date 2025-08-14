@@ -1,0 +1,621 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
+        />
+        <title>ZTEuSmartViewLLD</title>
+        <link rel="icon" href="./assets/logo5.png" type="image/png" />
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <canvas></canvas>
+        <div class="content-wrapper">
+            <h1>ZTEuSmartViewLLD</h1>
+            <h2>网络服务处视频交付科</h2>
+            <form id="params-form">
+                <div class="tabs">
+                    <button type="button" class="tab-link active" data-tab="tab1">基础配置</button>
+                    <button type="button" class="tab-link" data-tab="tab2">网络配置</button>
+                    <button type="button" class="tab-link" data-tab="tab3">业务配置</button>
+                    <button type="button" class="tab-link" data-tab="tab5">服务器规格</button>
+                </div>
+
+                <div id="tab1" class="tab-content active">
+                    <div class="container">
+                        <fieldset class="core-architecture">
+                            <legend>核心架构</legend>
+            
+                            <div class="fieldset-content">
+                                <div class="architecture-config-grid">
+                                    <div class="config-group">
+                                        <h4 class="config-group-title">网络架构</h4>
+                                        <div class="form-group">
+                                            <label for="isNetCombined">管理/业务网合设:</label>
+                                            <div class="custom-select-wrapper">
+                                                <select id="isNetCombined">
+                                                    <option value="true">是</option>
+                                                    <option value="false" selected>否</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="config-group">
+                                        <h4 class="config-group-title">高可用配置</h4>
+                                        <div class="form-group">
+                                            <label for="isDualNode">管理节点双机:</label>
+                                            <div class="custom-select-wrapper">
+                                                <select id="isDualNode">
+                                                    <option value="true" selected>是</option>
+                                                    <option value="false">否</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="isCephDual">Ceph管理双机:</label>
+                                            <div class="custom-select-wrapper">
+                                                <select id="isCephDual">
+                                                    <option value="true" selected>是</option>
+                                                    <option value="false">否</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="config-group">
+                                        <h4 class="config-group-title">节点配置</h4>
+                                        <div class="form-group">
+                                            <label for="isFusionNode">计算/存储合设:</label>
+                                            <div class="custom-select-wrapper">
+                                                <select id="isFusionNode">
+                                                    <option value="true">是</option>
+                                                    <option value="false" selected>否</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="isMngAsFusion">管理节点计入超融合:</label>
+                                            <div class="custom-select-wrapper">
+                                                <select id="isMngAsFusion">
+                                                    <option value="true">是</option>
+                                                    <option value="false" selected>否</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend>服务器数量与命名</legend>
+                
+                            <div class="fieldset-content">
+                                <div class="server-cards-grid">
+                                    <div class="server-card">
+                                        <div class="server-card-header">
+                                            <h4>管理服务器</h4>
+                                        </div>
+                                        <div class="server-card-content">
+                                            <div class="server-field">
+                                                <label for="countMng">数量:</label>
+                                                <input type="number" id="countMng" value="2" />
+                                            </div>
+                                            <div class="server-field">
+                                                <label for="prefixMng">前缀:</label>
+                                                <input type="text" id="prefixMng" value="VMC" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="server-card">
+                                        <div class="server-card-header">
+                                            <h4>计算服务器</h4>
+                                        </div>
+                                        <div class="server-card-content">
+                                            <div class="server-field">
+                                                <label for="countFusion">数量:</label>
+                                                <input type="number" id="countFusion" value="3" />
+                                            </div>
+                                            <div class="server-field">
+                                                <label for="prefixFusion">前缀:</label>
+                                                <input type="text" id="prefixFusion" value="ZXVE" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="server-card">
+                                        <div class="server-card-header">
+                                            <h4>存储服务器</h4>
+                                        </div>
+                                        <div class="server-card-content">
+                                            <div class="server-field">
+                                                <label for="countStor">数量:</label>
+                                                <input type="number" id="countStor" value="3" />
+                                            </div>
+                                            <div class="server-field">
+                                                <label for="prefixStor">前缀:</label>
+                                                <input type="text" id="prefixStor" value="STOR" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="server-card">
+                                        <div class="server-card-header">
+                                            <h4>CAG服务器</h4>
+                                        </div>
+                                        <div class="server-card-content">
+                                            <div class="server-field">
+                                                <label for="countCAG">数量:</label>
+                                                <input type="number" id="countCAG" value="3" />
+                                            </div>
+                                            <div class="server-field">
+                                                <label for="prefixCAG">前缀:</label>
+                                                <input type="text" id="prefixCAG" value="CAG" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+
+                <div id="tab2" class="tab-content">
+                    <div class="container">
+                        <fieldset>
+                            <legend>管理网绑定</legend>
+        
+                            <div class="fieldset-content">
+                            <div class="form-group">
+                                <label for="mngBondName">端口名称:</label>
+                                <input type="text" id="mngBondName" value="brcomm_bond" />
+                            </div>
+                            <div class="form-group">
+                                <label for="mngBondNics">绑定网卡:</label>
+                                <input type="text" id="mngBondNics" value="enp133s0f0;enp134s0f0" />
+                            </div>
+                            <div class="form-group">
+                                <label for="mngBondMode">绑定模式:</label>
+                                <div class="custom-select-wrapper">
+                                    <select id="mngBondMode">
+                                        <option value="active-backup" selected>active-backup</option>
+                                        <option value="lacp">LACP (802.3ad)</option>
+                                        <option value="balance-tlb">balance-tlb</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <fieldset id="bizNetworkFieldset">
+                            <legend>业务网绑定</legend>
+
+                            <div class="fieldset-content">
+                            <div class="form-group">
+                                <label for="bizBondName">端口名称:</label>
+                                <input type="text" id="bizBondName" value="br0" />
+                            </div>
+                            <div class="form-group">
+                                <label for="bizBondNics">绑定网卡:</label>
+                                <input type="text" id="bizBondNics" value="enp133s0f1;enp134s0f1" />
+                            </div>
+                            <div class="form-group">
+                                <label for="bizBondMode">绑定模式:</label>
+                                <div class="custom-select-wrapper">
+                                    <select id="bizBondMode">
+                                        <option value="active-backup" selected>active-backup</option>
+                                        <option value="lacp">LACP (802.3ad)</option>
+                                        <option value="balance-tlb">balance-tlb</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>存储网绑定</legend>
+                            <div class="fieldset-content">
+                            <div class="form-group">
+                                <label for="storBondName">端口名称:</label>
+                                <input type="text" id="storBondName" value="CephPublic" />
+                            </div>
+                            <div class="form-group">
+                                <label for="storBondNics">绑定网卡:</label>
+                                <input type="text" id="storBondNics" value="enp3s0;enp4s0" />
+                            </div>
+                            <div class="form-group">
+                                <label for="storBondMode">绑定模式:</label>
+                                <div class="custom-select-wrapper">
+                                    <select id="storBondMode">
+                                        <option value="active-backup" selected>active-backup</option>
+                                        <option value="lacp">LACP (802.3ad)</option>
+                                        <option value="balance-tlb">balance-tlb</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="ip-address-pool">
+                            <legend>IP地址池</legend>
+                            <div class="fieldset-content">
+                            <div class="form-group">
+                                <label for="mngIpRange">管理网IP段:</label>
+                                <textarea id="mngIpRange" rows="2">192.168.1.10-192.168.1.100</textarea>
+                                <small class="form-hint">支持格式: 1.1.1.1-100, 1.1.2.0/24，多段用分号分隔</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="bizIpRange">业务网IP段:</label>
+                                <textarea id="bizIpRange" rows="2">192.168.2.10-192.168.2.100</textarea>
+                                <small class="form-hint">多段用分号分隔</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="pubIpRange">存储公网IP段:</label>
+                                <textarea id="pubIpRange" rows="2">192.168.3.10-192.168.3.100</textarea>
+                                <small class="form-hint">多段用分号分隔</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="cluIpRange">存储集群IP段:</label>
+                                <textarea id="cluIpRange" rows="2">192.168.4.10-192.168.4.100</textarea>
+                                <small class="form-hint">多段用分号分隔</small>
+                            </div>
+                            <div class="form-group radio-group-container">
+                                <label for="alignFloatIp">浮动IP地址对齐:</label>
+                                <div class="radio-group">
+                                    <input type="radio" id="alignFloatIpYes" name="alignFloatIp" value="true" checked />
+                                    <label for="alignFloatIpYes">是</label>
+                                    <input type="radio" id="alignFloatIpNo" name="alignFloatIp" value="false" />
+                                    <label for="alignFloatIpNo">否</label>
+                                </div>
+                            </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+
+                <div id="tab3" class="tab-content">
+                    <div class="container">
+                        <fieldset class="vm-types-container">
+                            <legend>桌面虚机类型</legend>
+                            <div class="fieldset-content">
+                                <div id="desktopVmTypes" class="vm-types-grid">
+                                    <div class="desktop-vm-type vm-type-card" data-type="A">
+                                        <div class="vm-type-header">
+                                            <h4>类型A</h4>
+                                        </div>
+                                        <div class="vm-spec-grid">
+                                            <div class="vm-spec-item">
+                                                <label>CPU核数</label>
+                                                <input type="number" class="vm-cpu" min="1" value="4" />
+                                            </div>
+                                            <div class="vm-spec-item">
+                                                <label>内存(GB)</label>
+                                                <input type="number" class="vm-memory" min="1" value="8" />
+                                            </div>
+                                            <div class="vm-spec-item">
+                                                <label>存储(GB)</label>
+                                                <input type="number" class="vm-storage" min="1" value="200" />
+                                            </div>
+                                            <div class="vm-spec-item">
+                                                <label>数量</label>
+                                                <input type="number" class="vm-count" min="0" value="500" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="desktop-vm-type vm-type-card" data-type="B">
+                                        <div class="vm-type-header">
+                                            <h4>类型B</h4>
+                                            <button type="button" class="remove-vm-type-btn" onclick="DesktopVmManager.removeVmType('B')" title="删除此类型">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div class="vm-spec-grid">
+                                            <div class="vm-spec-item">
+                                                <label>CPU核数</label>
+                                                <input type="number" class="vm-cpu" min="1" value="8" />
+                                            </div>
+                                            <div class="vm-spec-item">
+                                                <label>内存(GB)</label>
+                                                <input type="number" class="vm-memory" min="1" value="16" />
+                                            </div>
+                                            <div class="vm-spec-item">
+                                                <label>存储(GB)</label>
+                                                <input type="number" class="vm-storage" min="1" value="500" />
+                                            </div>
+                                            <div class="vm-spec-item">
+                                                <label>数量</label>
+                                                <input type="number" class="vm-count" min="0" value="300" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="vm-actions">
+                                    <button type="button" id="addVmType" class="add-vm-type-btn">+ 添加虚机类型</button>
+                                    <div class="vm-summary">
+                                        <span class="summary-label">总虚机数量:</span>
+                                        <span id="totalVmCount" class="summary-value">1000</span>
+                                        <span class="summary-unit">台</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="business-config-container">
+                            <legend>业务配置</legend>
+                            <div class="fieldset-content">
+                                <div class="business-config-grid">
+                                    <div class="config-section basic-config">
+                                        <h4 class="section-title">基础配置</h4>
+                                        <div class="form-group">
+                                            <label for="userCount">用户量</label>
+                                            <input type="text" inputmode="numeric" pattern="[0-9]*" id="userCount" value="1000" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="scene">微服务场景</label>
+                                            <div class="custom-select-wrapper">
+                                                <select id="scene">
+                                                    <option>管理网和业务网隔离场景_运维通过管理网访问</option>
+                                                    <option>管理网和业务网隔离场景_运维通过业务网访问</option>
+                                                    <option>管理网和业务网互通场景</option>
+                                                    <option>管理网和业务网合一场景</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="storageSecurity">存储安全</label>
+                                            <div class="custom-select-wrapper">
+                                                <select id="storageSecurity">
+                                                    <option>3副本</option>
+                                                    <option>2副本</option>
+                                                    <option>4+2纠删码</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="config-section service-config">
+                                        <h4 class="section-title">服务部署</h4>
+                                        <div class="form-group">
+                                            <label for="isZXOPS">部署ZXOPS</label>
+                                            <div class="custom-select-wrapper">
+                                                <select id="isZXOPS">
+                                                    <option value="true" selected>是</option>
+                                                    <option value="false">否</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="insightDeployType">Insight部署</label>
+                                            <div class="custom-select-wrapper">
+                                                <select id="insightDeployType">
+                                                    <option>否</option>
+                                                    <option>非高可用部署</option>
+                                                    <option>高可用部署</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="deployTerminalMgmt">部署终端网管</label>
+                                            <div class="custom-select-wrapper">
+                                                <select id="deployTerminalMgmt">
+                                                    <option value="true">是</option>
+                                                    <option value="false" selected>否</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="deployCAGPortal">部署CAG门户</label>
+                                            <div class="custom-select-wrapper">
+                                                <select id="deployCAGPortal">
+                                                    <option value="高可用部署">高可用部署</option>
+                                                    <option value="非高可用部署">非高可用部署</option>
+                                                    <option value="否" selected>否</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="deployDEM">部署DEM</label>
+                                            <div class="custom-select-wrapper">
+                                                <select id="deployDEM">
+                                                    <option value="true" selected>是</option>
+                                                    <option value="false">否</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="downloadType">部署升级服务器</label>
+                                            <div class="custom-select-wrapper">
+                                                <select id="downloadType">
+                                                    <option>否</option>
+                                                    <option>单机部署</option>
+                                                    <option selected>集群部署</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+
+                <div id="tab5" class="tab-content">
+                    <div class="container">
+                        <fieldset class="server-config-section">
+                            <legend>管理服务器配置</legend>
+                            <div class="fieldset-content">
+                                <div class="server-config-grid">
+                                    <div class="config-group storage-config">
+                                        <h4 class="config-group-title">存储配置</h4>
+                                        <div class="config-row">
+                                            <div class="config-item">
+                                                <label for="mgmtSsdCount">SSD盘数量</label>
+                                                <input type="number" id="mgmtSsdCount" min="0" value="2" />
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="mgmtSsdSpec">SSD规格(TB)</label>
+                                                <input type="text" id="mgmtSsdSpec" placeholder="如: 1.92" value="1.92" />
+                                            </div>
+                                        </div>
+                                        <div class="config-row">
+                                            <div class="config-item">
+                                                <label for="mgmtHddCount">HDD盘数量</label>
+                                                <input type="number" id="mgmtHddCount" min="0" value="4" />
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="mgmtHddSpec">HDD规格(TB)</label>
+                                                <input type="text" id="mgmtHddSpec" placeholder="如: 8" value="8" />
+                                            </div>
+                                        </div>
+                                        <div class="config-row single-item">
+                                            <div class="config-item">
+                                                <label for="mgmtOsdReservedSize">OSD预留大小</label>
+                                                <div class="inline-input-with-unit">
+                                                    <input type="number" id="mgmtOsdReservedSize" min="0" step="0.01" value="0" placeholder="如: 1.0" />
+                                                    <span class="input-unit">TB</span>
+                                                </div>
+                                                <small class="form-hint">OSD预留容量用来创建OSD，不用做缓存盘，不能超过90%</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="config-group compute-config">
+                                        <h4 class="config-group-title">计算配置</h4>
+                                        <div class="config-row">
+                                            <div class="config-item">
+                                                <label for="mgmtCpuCores">CPU核数</label>
+                                                <input type="number" id="mgmtCpuCores" min="1" value="32" />
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="mgmtMemorySize">内存大小(GB)</label>
+                                                <input type="number" id="mgmtMemorySize" min="1" value="1024" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="server-config-section">
+                            <legend>计算（超融合）服务器配置</legend>
+                            <div class="fieldset-content">
+                                <div class="server-config-grid">
+                                    <div class="config-group storage-config">
+                                        <h4 class="config-group-title">存储配置</h4>
+                                        <div class="config-row">
+                                            <div class="config-item">
+                                                <label for="computeSsdCount">SSD盘数量</label>
+                                                <input type="number" id="computeSsdCount" min="0" value="2" />
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="computeSsdSpec">SSD规格(TB)</label>
+                                                <input type="text" id="computeSsdSpec" placeholder="如: 1.92" value="1.92" />
+                                            </div>
+                                        </div>
+                                        <div class="config-row">
+                                            <div class="config-item">
+                                                <label for="computeHddCount">HDD盘数量</label>
+                                                <input type="number" id="computeHddCount" min="0" value="4" />
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="computeHddSpec">HDD规格(TB)</label>
+                                                <input type="text" id="computeHddSpec" placeholder="如: 8" value="8" />
+                                            </div>
+                                        </div>
+                                        <div class="config-row single-item">
+                                            <div class="config-item">
+                                                <label for="computeOsdReservedSize">OSD预留大小</label>
+                                                <div class="inline-input-with-unit">
+                                                    <input type="number" id="computeOsdReservedSize" min="0" step="0.01" value="0" placeholder="如: 1.0" />
+                                                    <span class="input-unit">TB</span>
+                                                </div>
+                                                <small class="form-hint">OSD预留容量用来创建OSD，不用做缓存盘，不能超过90%</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="config-group compute-config">
+                                        <h4 class="config-group-title">计算配置</h4>
+                                        <div class="config-row">
+                                            <div class="config-item">
+                                                <label for="computeCpuCores">CPU核数</label>
+                                                <input type="number" id="computeCpuCores" min="1" value="32" />
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="computeMemorySize">内存大小(GB)</label>
+                                                <input type="number" id="computeMemorySize" min="1" value="1024" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="server-config-section">
+                            <legend>存储服务器配置</legend>
+                            <div class="fieldset-content">
+                                <div class="server-config-grid">
+                                    <div class="config-group storage-config">
+                                        <h4 class="config-group-title">存储配置</h4>
+                                        <div class="config-row">
+                                            <div class="config-item">
+                                                <label for="storageSsdCount">SSD盘数量</label>
+                                                <input type="number" id="storageSsdCount" min="0" value="2" />
+                                                <small class="form-hint">非系统盘</small>
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="storageSsdSpec">SSD规格(TB)</label>
+                                                <input type="text" id="storageSsdSpec" placeholder="如: 1.92" value="1.92" />
+                                            </div>
+                                        </div>
+                                        <div class="config-row">
+                                            <div class="config-item">
+                                                <label for="storageHddCount">HDD盘数量</label>
+                                                <input type="number" id="storageHddCount" min="0" value="4" />
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="storageHddSpec">HDD规格(TB)</label>
+                                                <input type="text" id="storageHddSpec" placeholder="如: 8" value="8" />
+                                            </div>
+                                        </div>
+                                        <div class="config-row single-item">
+                                            <div class="config-item">
+                                                <label for="storageOsdReservedSize">单盘OSD预留大小</label>
+                                                <div class="inline-input-with-unit">
+                                                    <input type="number" id="storageOsdReservedSize" min="0" step="0.01" value="0" placeholder="如: 1.0" />
+                                                    <span class="input-unit">TB</span>
+                                                </div>
+                                                <small class="form-hint">SSD资源紧张时启用，OSD预留容量用来创建OSD，不用做缓存盘，不能超过90%</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="config-group compute-config">
+                                        <h4 class="config-group-title">计算配置</h4>
+                                        <div class="config-row">
+                                            <div class="config-item">
+                                                <label for="storageCpuCores">CPU核数</label>
+                                                <input type="number" id="storageCpuCores" min="1" value="32" />
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="storageMemorySize">内存大小(GB)</label>
+                                                <input type="number" id="storageMemorySize" min="1" value="1024" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+
+                <button type="submit">生成Excel</button>
+            </form>
+            <div id="status"></div>
+        </div>
+
+        <script src="./fluid.js" type="text/javascript"></script>
+        <script src="./renderer.js" type="text/javascript"></script>
+    </body>
+</html>

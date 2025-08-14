@@ -13,4 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // 打开日志文件
     openLogFile: () => ipcRenderer.invoke('open-log-file'),
+
+    // 调整窗口大小
+    resizeWindow: (options) => ipcRenderer.invoke('resize-window', options),
 });

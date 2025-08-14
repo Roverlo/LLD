@@ -5,7 +5,7 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const { generatePlan } = require('./generator.js');
+const { Worker } = require('worker_threads');
 const { generateExcelFile } = require('./services/excel-service');
 const { logger } = require('./services/logger');
 
@@ -53,7 +53,7 @@ function validateCacheRatio(params) {
 const APP_INFO = {
     title: '关于 ZTEuSmartViewLLD',
     message: 'ZTEuSmartViewLLD v1.0.2',
-    detail: '软件作者：罗发文\n联系方式：15029342400\n\n版本号：v1.0.2\n更新日期：2025-07-28\n\n云电脑LLD生成工具\n© 2025 网络服务处视频交付科',
+    detail: '软件作者：罗发文\n联系方式：15029342400\n\n版本号：v1.0.2\n更新日期：2025-08-10\n\n云电脑LLD生成工具\n© 2025 网络服务处视频交付科',
 };
 
 /**
@@ -62,11 +62,19 @@ const APP_INFO = {
 function createWindow() {
     logger.info('Creating main window');
 
+    // 设置固定的窗口尺寸
+    const windowWidth = 1000;
+    const windowHeight = 700;
+    
     const mainWindow = new BrowserWindow({
-        width: 1000,
-        height: 700,
-        minWidth: 900,
-        minHeight: 650,
+        width: windowWidth,
+        height: windowHeight,
+        minWidth: windowWidth,
+        minHeight: windowHeight,
+        maxWidth: windowWidth,
+        maxHeight: windowHeight,
+        center: true, // 窗口居中显示
+        resizable: false, // 禁用窗口大小调整
         icon: path.join(__dirname, '../../build/icon.png'),
         webPreferences: {
             preload: path.join(__dirname, '../preload.js'),
@@ -124,7 +132,21 @@ function createMenu(mainWindow) {
                     type: 'info',
                     title: '特别鸣谢',
                     message: '感谢内测团队的大力支持！',
-                    detail: '特别感谢以下同事在内测过程中提供的宝贵帮助和建议：\n\n内测团队成员（按姓氏首字母排序）：\n• 杨帅6000021393\n• 同事B\n• 同事C\n• 同事D\n• 同事E\n• 同事F\n\n感谢大家在功能测试、用户体验优化、错误反馈等方面的大力支持！',
+                    detail: '特别感谢以下同事在内测过程中提供的宝贵帮助和建议：\n\n内测团队成员（按姓氏首字母排序）：\n• 贾君6241003236\n• 钱俊慧10341994\n• 杨帅6000021393\n• 张夕淳6241004128\n\n感谢大家在功能测试、用户体验优化、错误反馈等方面的大力支持！',
+                    buttons: [],
+                    noLink: true,
+                    textWidth: 400,
+                });
+            },
+        },
+        {
+            label: '本工具处于测试阶段，生成文档仅供参考，请仔细核查',
+            click: () => {
+                dialog.showMessageBox(mainWindow, {
+                    type: 'warning',
+                    title: '重要提示',
+                    message: '本工具处于测试阶段，生成文档仅供参考，请仔细核查',
+                    detail: '本工具处于测试阶段，生成文档仅供参考，请仔细核查',
                     buttons: [],
                     noLink: true,
                     textWidth: 400,
@@ -191,7 +213,7 @@ ipcMain.handle('open-log-file', async () => {
  */
 ipcMain.handle('generate-excel', async (event, params) => {
     const startTime = Date.now();
-    logger.info('Starting Excel generation', {
+    logger.info('Starting Excel generation with worker thread', {
         params: {
             userCount: params.userCount,
             scene: params.scene,
@@ -200,77 +222,104 @@ ipcMain.handle('generate-excel', async (event, params) => {
         },
     });
 
-    try {
-        // 1. 验证缓存比
-        const cacheRatioValidation = validateCacheRatio(params);
-        if (!cacheRatioValidation.valid) {
-            logger.error('缓存比验证失败', { error: cacheRatioValidation.error });
-            return {
-                success: false,
-                error: cacheRatioValidation.error,
-                code: 'CACHE_RATIO_TOO_LOW',
-            };
-        }
+    return new Promise((resolve) => {
+        const worker = new Worker(path.join(__dirname, 'worker.js'), { workerData: params });
 
-        // 2. 生成规划
-        const plan = generatePlan(params);
+        worker.on('message', async (message) => {
+            logger.info('Received message from worker', { message });
 
-        if (plan.error) {
-            logger.error('规划生成失败', { error: plan.error, code: plan.code });
-            return {
-                success: false,
-                error: plan.error,
-                code: plan.code,
-            };
-        }
+            try {
+                if (message.success) {
+                    const plan = message.plan;
 
-        logger.info('Planning generated successfully', {
-            servers: plan.servers.length,
-            vms: plan.vms.length,
-            clusters: plan.storagePlan.length,
+                    if (!plan || !plan.servers || !plan.vms || !plan.storagePlan) {
+                        throw new Error('Worker returned success but the plan object is malformed.');
+                    }
+
+                    logger.info('Planning generated successfully in worker', {
+                        servers: plan.servers.length,
+                        vms: plan.vms.length,
+                        clusters: plan.storagePlan.length,
+                    });
+
+                    const result = await generateExcelFile(plan, BrowserWindow.getFocusedWindow());
+                    const duration = Date.now() - startTime;
+
+                    if (result.success) {
+                        logger.info('Excel file generated successfully', {
+                            filePath: result.filePath,
+                            duration: `${duration}ms`,
+                        });
+                        resolve({
+                            success: true,
+                            filePath: result.filePath,
+                            summary: plan.summary,
+                            duration,
+                        });
+                    } else {
+                        logger.warn('Excel file generation cancelled or failed', {
+                            message: result.message,
+                            duration: `${duration}ms`,
+                        });
+                        resolve({
+                            success: false,
+                            error: result.message || result.error,
+                            duration,
+                        });
+                    }
+                } else {
+                    const duration = Date.now() - startTime;
+                    logger.error('Worker thread failed to generate plan', {
+                        error: message.error,
+                        duration: `${duration}ms`,
+                    });
+                    resolve({
+                        success: false,
+                        error: `生成失败: ${message.error}`,
+                        duration,
+                    });
+                }
+            } catch (e) {
+                const duration = Date.now() - startTime;
+                logger.error('Error processing worker message or generating Excel', {
+                    error: e.message,
+                    stack: e.stack,
+                    duration: `${duration}ms`,
+                });
+                resolve({
+                    success: false,
+                    error: `处理生成请求时发生内部错误: ${e.message}`,
+                    duration,
+                });
+            }
         });
 
-        // 2. 生成Excel文件
-        const result = await generateExcelFile(plan, BrowserWindow.getFocusedWindow());
-
-        const duration = Date.now() - startTime;
-
-        if (result.success) {
-            logger.info('Excel file generated successfully', {
-                filePath: result.filePath,
+        worker.on('error', (error) => {
+            const duration = Date.now() - startTime;
+            logger.error('Worker thread error', {
+                error: error.message,
+                stack: error.stack,
                 duration: `${duration}ms`,
             });
-            return {
-                success: true,
-                filePath: result.filePath,
-                summary: plan.summary,
-                duration,
-            };
-        } else {
-            logger.warn('Excel文件生成取消或失败', {
-                message: result.message,
-                duration: `${duration}ms`,
-            });
-            return {
+            resolve({
                 success: false,
-                error: result.message || result.error,
+                error: `生成失败 (worker error): ${error.message}`,
                 duration,
-            };
-        }
-    } catch (error) {
-        const duration = Date.now() - startTime;
-        logger.error('生成Excel文件时发生异常', {
-            error: error.message,
-            stack: error.stack,
-            duration: `${duration}ms`,
+            });
         });
 
-        return {
-            success: false,
-            error: `生成失败: ${error.message}`,
-            duration,
-        };
-    }
+        worker.on('exit', (code) => {
+            if (code !== 0) {
+                const duration = Date.now() - startTime;
+                logger.error(`Worker stopped with exit code ${code}`, { duration: `${duration}ms` });
+                resolve({
+                    success: false,
+                    error: `Worker stopped unexpectedly with exit code ${code}`,
+                    duration,
+                });
+            }
+        });
+    });
 });
 
 /**
@@ -285,6 +334,57 @@ ipcMain.handle('get-app-info', async () => {
         electronVersion: process.versions.electron,
         nodeVersion: process.versions.node,
     };
+});
+
+/**
+ * 处理窗口大小调整的IPC请求
+ */
+ipcMain.handle('resize-window', async (event, options) => {
+    try {
+        const window = BrowserWindow.fromWebContents(event.sender);
+        if (!window) {
+            throw new Error('无法找到发送请求的窗口');
+        }
+
+        const currentBounds = window.getBounds();
+        const newBounds = {
+            width: options.width || currentBounds.width,
+            height: options.height || currentBounds.height,
+            x: options.x !== undefined ? options.x : currentBounds.x,
+            y: options.y !== undefined ? options.y : currentBounds.y
+        };
+
+        // 确保新尺寸在允许范围内
+        const minSize = window.getMinimumSize();
+        const maxSize = window.getMaximumSize();
+        
+        newBounds.width = Math.max(minSize[0], Math.min(maxSize[0] || newBounds.width, newBounds.width));
+        newBounds.height = Math.max(minSize[1], Math.min(maxSize[1] || newBounds.height, newBounds.height));
+
+        // 调整窗口大小
+        window.setBounds(newBounds, true);
+        
+        // 只在显著变化时记录日志（减少日志噪音）
+        const sizeChange = Math.abs(newBounds.width - currentBounds.width) + Math.abs(newBounds.height - currentBounds.height);
+        if (sizeChange > 50) {
+            logger.info('Window resized significantly', {
+                from: currentBounds,
+                to: newBounds,
+                change: sizeChange
+            });
+        }
+
+        return {
+            success: true,
+            bounds: newBounds
+        };
+    } catch (error) {
+        logger.error('Failed to resize window', { error: error.message });
+        return {
+            success: false,
+            error: error.message
+        };
+    }
 });
 
 /**
