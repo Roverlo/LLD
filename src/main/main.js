@@ -275,7 +275,7 @@ ipcMain.handle('generate-excel', async (event, params) => {
                     });
                     resolve({
                         success: false,
-                        error: `生成失败: ${message.error}`,
+                        error: message.error,
                         duration,
                     });
                 }

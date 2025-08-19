@@ -74,7 +74,7 @@ const validateParams = (params) => {
  * @returns {string[]} 错误信息数组
  */
 const validateServerCounts = (params) => {
-    const { countMng, countFusion, countCalc, countStor, countCAG, isDualNode, isFusionNode } = params;
+    const { countMng, countFusion, countCalc, countStor, countCAG, isDualNode, isFusionNode, isMngAsFusion } = params;
 
     const alerts = [];
 
@@ -89,15 +89,26 @@ const validateServerCounts = (params) => {
 
     // 验证计算/超融合服务器数量
     if (isFusionNode) {
-        if (countFusion < 1) {
-            alerts.push('超融合模式下，超融合服务器数量不能少于1台。');
-        }
         if (countCalc > 0) {
             alerts.push('超融合模式下，不应配置独立的计算服务器。');
         }
+        
+        // 新增：验证超融合模式下的Ceph存储最小节点要求
+        if (!isMngAsFusion) {
+            // 管理节点不计入超融合时，超融合服务器数量必须大于等于3
+            if (countFusion < 3) {
+                alerts.push('超融合模式下，且管理节点不计入超融合时，超融合服务器数量不能少于3台（Ceph最小要求）。');
+            }
+        } else {
+            // 管理节点计入超融合时，超融合服务器数量+管理服务器数量的总和必须大于等于3
+            if ((countFusion + countMng) < 3) {
+                alerts.push('计算/存储合设且管理节点计入超融合时，超融合服务器数量和管理服务器数量之和不能少于3台（Ceph最小要求）。');
+            }
+        }
     } else {
-        if (countCalc < 1) {
-            alerts.push('分离模式下，计算服务器数量不能少于1台。');
+        // 分离模式下，允许计算服务器数量为0（用于IP需求计算）
+        if (countCalc < 0) {
+            alerts.push('计算服务器数量不能为负数。');
         }
         if (countStor < 3) {
             alerts.push('分离模式下，存储服务器数量不能少于3台（Ceph最小要求）。');
