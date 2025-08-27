@@ -1,5 +1,24 @@
 import { Utils } from './utils.js';
 
+// 默认存储配置常量
+const DEFAULT_SSD_COUNT = 2;
+const DEFAULT_SSD_SPEC = '1.92';
+const DEFAULT_OSD_RESERVED_SIZE = 0;
+const DEFAULT_HDD_COUNT = 4;
+const DEFAULT_HDD_SPEC = '8';
+
+// 默认硬件配置常量
+const DEFAULT_MNG_CPU_CORES = 32;
+const DEFAULT_MNG_MEMORY = 128;
+const DEFAULT_FUSION_CPU_CORES = 64;
+const DEFAULT_FUSION_MEMORY = 256;
+const DEFAULT_CALC_CPU_CORES = 64;
+const DEFAULT_CALC_MEMORY = 256;
+const DEFAULT_STOR_CPU_CORES = 32;
+const DEFAULT_STOR_MEMORY = 128;
+const DEFAULT_CAG_CPU_CORES = 16;
+const DEFAULT_CAG_MEMORY = 64;
+
 /**
  * 参数收集器
  */
@@ -45,51 +64,51 @@ export const ParamCollector = {
             storageSecurity: Utils.getFormValue('storageSecurity', 'string'),
 
             // 存储配置信息（保留原有全局配置用于兼容性）
-            ssdCount: Utils.getFormValue('ssdCount', 'number', 2) || Utils.getFormValue('mngSsdCount', 'number', 2),
-            ssdSpec: Utils.getFormValue('ssdSpec', 'string', '1.92') || Utils.getFormValue('mngSsdSpec', 'string', '1.92'),
-            osdReservedSize: Utils.getFormValue('osdReservedSize', 'number', 0) || Utils.getFormValue('mngOsdReservedSize', 'number', 0),
-            hddCount: Utils.getFormValue('hddCount', 'number', 4) || Utils.getFormValue('mngHddCount', 'number', 4),
-            hddSpec: Utils.getFormValue('hddSpec', 'string', '8') || Utils.getFormValue('mngHddSpec', 'string', '8'),
+            ssdCount: Utils.getFormValue('ssdCount', 'number', DEFAULT_SSD_COUNT) || Utils.getFormValue('mngSsdCount', 'number', DEFAULT_SSD_COUNT),
+            ssdSpec: Utils.getFormValue('ssdSpec', 'string', DEFAULT_SSD_SPEC) || Utils.getFormValue('mngSsdSpec', 'string', DEFAULT_SSD_SPEC),
+            osdReservedSize: Utils.getFormValue('osdReservedSize', 'number', DEFAULT_OSD_RESERVED_SIZE) || Utils.getFormValue('mngOsdReservedSize', 'number', DEFAULT_OSD_RESERVED_SIZE),
+            hddCount: Utils.getFormValue('hddCount', 'number', DEFAULT_HDD_COUNT) || Utils.getFormValue('mngHddCount', 'number', DEFAULT_HDD_COUNT),
+            hddSpec: Utils.getFormValue('hddSpec', 'string', DEFAULT_HDD_SPEC) || Utils.getFormValue('mngHddSpec', 'string', DEFAULT_HDD_SPEC),
 
             // 管理服务器存储配置
             mngSsdCount: Utils.getFormValue('mngSsdCount', 'number', 2),
-            mngSsdSpec: Utils.getFormValue('mngSsdSpec', 'string', '1.92'),
-            mngOsdReservedSize: Utils.getFormValue('mngOsdReservedSize', 'number', 0),
+            mngSsdSpec: Utils.getFormValue('mgmtSsdSpec', 'text', '1.92'),
+            mngOsdReservedSize: Utils.getFormValue('mgmtOsdReservedSize', 'number', 0),
             mngHddCount: Utils.getFormValue('mngHddCount', 'number', 4),
-            mngHddSpec: Utils.getFormValue('mngHddSpec', 'string', '8'),
+            mngHddSpec: Utils.getFormValue('mgmtHddSpec', 'text', '8'),
 
             // 超融合服务器存储配置
-            fusionSsdCount: Utils.getFormValue('fusionSsdCount', 'number', 2),
-            fusionSsdSpec: Utils.getFormValue('fusionSsdSpec', 'string', '1.92'),
-            fusionOsdReservedSize: Utils.getFormValue('fusionOsdReservedSize', 'number', 0),
-            fusionHddCount: Utils.getFormValue('fusionHddCount', 'number', 4),
-            fusionHddSpec: Utils.getFormValue('fusionHddSpec', 'string', '8'),
+            fusionSsdCount: Utils.getFormValue('fusionSsdCount', 'number', DEFAULT_SSD_COUNT),
+            fusionSsdSpec: Utils.getFormValue('fusionSsdSpec', 'string', DEFAULT_SSD_SPEC),
+            fusionOsdReservedSize: Utils.getFormValue('fusionOsdReservedSize', 'number', DEFAULT_OSD_RESERVED_SIZE),
+            fusionHddCount: Utils.getFormValue('fusionHddCount', 'number', DEFAULT_HDD_COUNT),
+            fusionHddSpec: Utils.getFormValue('fusionHddSpec', 'string', DEFAULT_HDD_SPEC),
 
             // 计算服务器存储配置
-            calcSsdCount: Utils.getFormValue('calcSsdCount', 'number', 2),
-            calcSsdSpec: Utils.getFormValue('calcSsdSpec', 'string', '1.92'),
-            calcOsdReservedSize: Utils.getFormValue('calcOsdReservedSize', 'number', 0),
-            calcHddCount: Utils.getFormValue('calcHddCount', 'number', 4),
-            calcHddSpec: Utils.getFormValue('calcHddSpec', 'string', '8'),
+            calcSsdCount: Utils.getFormValue('calcSsdCount', 'number', DEFAULT_SSD_COUNT),
+            calcSsdSpec: Utils.getFormValue('calcSsdSpec', 'string', DEFAULT_SSD_SPEC),
+            calcOsdReservedSize: Utils.getFormValue('calcOsdReservedSize', 'number', DEFAULT_OSD_RESERVED_SIZE),
+            calcHddCount: Utils.getFormValue('calcHddCount', 'number', DEFAULT_HDD_COUNT),
+            calcHddSpec: Utils.getFormValue('calcHddSpec', 'string', DEFAULT_HDD_SPEC),
 
             // 存储服务器存储配置
-            storSsdCount: Utils.getFormValue('storSsdCount', 'number', 2),
-            storSsdSpec: Utils.getFormValue('storSsdSpec', 'string', '1.92'),
-            storOsdReservedSize: Utils.getFormValue('storOsdReservedSize', 'number', 0),
-            storHddCount: Utils.getFormValue('storHddCount', 'number', 4),
-            storHddSpec: Utils.getFormValue('storHddSpec', 'string', '8'),
+            storSsdCount: Utils.getFormValue('storSsdCount', 'number', DEFAULT_SSD_COUNT),
+            storSsdSpec: Utils.getFormValue('storSsdSpec', 'string', DEFAULT_SSD_SPEC),
+            storOsdReservedSize: Utils.getFormValue('storOsdReservedSize', 'number', DEFAULT_OSD_RESERVED_SIZE),
+            storHddCount: Utils.getFormValue('storHddCount', 'number', DEFAULT_HDD_COUNT),
+            storHddSpec: Utils.getFormValue('storHddSpec', 'string', DEFAULT_HDD_SPEC),
 
             // 服务器硬件配置
             mngCpuCores: Utils.getFormValue('mngCpuCores', 'number', 32),
             mngMemory: Utils.getFormValue('mngMemory', 'number', 128),
-            fusionCpuCores: Utils.getFormValue('fusionCpuCores', 'number', 64),
-            fusionMemory: Utils.getFormValue('fusionMemory', 'number', 256),
-            calcCpuCores: Utils.getFormValue('calcCpuCores', 'number', 64),
-            calcMemory: Utils.getFormValue('calcMemory', 'number', 256),
-            storCpuCores: Utils.getFormValue('storCpuCores', 'number', 32),
-            storMemory: Utils.getFormValue('storMemory', 'number', 128),
-            cagCpuCores: Utils.getFormValue('cagCpuCores', 'number', 16),
-            cagMemory: Utils.getFormValue('cagMemory', 'number', 64),
+            fusionCpuCores: Utils.getFormValue('fusionCpuCores', 'number', DEFAULT_FUSION_CPU_CORES),
+            fusionMemory: Utils.getFormValue('fusionMemory', 'number', DEFAULT_FUSION_MEMORY),
+            calcCpuCores: Utils.getFormValue('calcCpuCores', 'number', DEFAULT_CALC_CPU_CORES),
+            calcMemory: Utils.getFormValue('calcMemory', 'number', DEFAULT_CALC_MEMORY),
+            storCpuCores: Utils.getFormValue('storCpuCores', 'number', DEFAULT_STOR_CPU_CORES),
+            storMemory: Utils.getFormValue('storMemory', 'number', DEFAULT_STOR_MEMORY),
+            cagCpuCores: Utils.getFormValue('cagCpuCores', 'number', DEFAULT_CAG_CPU_CORES),
+            cagMemory: Utils.getFormValue('cagMemory', 'number', DEFAULT_CAG_MEMORY),
 
             // 管理服务器网络配置
             mngMgmtPortName: Utils.getFormValue('mngMgmtPortName', 'string', 'brcomm_bond'),
@@ -131,8 +150,8 @@ export const ParamCollector = {
             storStorNics: Utils.getFormValue('storStorNics', 'string', 'enp3s0;enp4s0'),
 
             // 兼容性：保留原有的全局CPU和内存配置
-            cpuCores: Utils.getFormValue('storCpuCores', 'number', 32),
-            memorySize: Utils.getFormValue('storMemory', 'number', 128),
+            cpuCores: Utils.getFormValue('storCpuCores', 'number', DEFAULT_STOR_CPU_CORES),
+            memorySize: Utils.getFormValue('storMemory', 'number', DEFAULT_STOR_MEMORY),
 
             // IP地址范围
             mngIpRange: Utils.getFormValue('mngIpRange', 'string'),
@@ -146,6 +165,18 @@ export const ParamCollector = {
             // 桌面虚机类型配置
             desktopVmTypes: this.collectDesktopVmTypes(),
         };
+
+        // 添加调试日志 - 输出关键参数
+        console.log('=== 参数收集调试信息 ===');
+        console.log('管理服务器CPU核数:', params.mngCpuCores);
+        console.log('管理服务器内存:', params.mngMemory);
+        console.log('管理服务器SSD规格:', params.mngSsdSpec);
+        console.log('管理服务器OSD预留:', params.mngOsdReservedSize);
+        console.log('管理服务器HDD规格:', params.mngHddSpec);
+        console.log('完整参数对象:', JSON.stringify(params, null, 2));
+        console.log('=== 参数收集调试信息结束 ===');
+
+        return params;
     },
 
     /**

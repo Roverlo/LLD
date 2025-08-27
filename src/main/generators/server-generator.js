@@ -47,9 +47,10 @@ const generateServerName = (type, idx, prefixes) => {
  * @param {string} pubIp - 存储公共网IP
  * @param {string} cluIp - 存储集群网IP
  * @param {string} floatIp - 浮动IP
+ * @param {Object} params - 参数配置
  * @returns {Object} 服务器对象
  */
-const createServerObject = (hostname, role, mngIp, bizIp, pubIp, cluIp, floatIp) => {
+const createServerObject = (hostname, role, mngIp, bizIp, pubIp, cluIp, floatIp, params = {}) => {
     // 检查是否为浮动IP服务器
     const isFloatingIp = role.includes('浮动IP') || role.includes('浮动');
 
@@ -62,16 +63,17 @@ const createServerObject = (hostname, role, mngIp, bizIp, pubIp, cluIp, floatIp)
         cluIp,
         floatIp,
         isFloatingIp, // 添加标识字段
-        specs: getServerSpecs(role),
+        specs: getServerSpecs(role, params),
     };
 };
 
 /**
  * 获取服务器规格
  * @param {string} role - 服务器角色
+ * @param {Object} params - 参数配置
  * @returns {Object} 服务器规格
  */
-const getServerSpecs = (role) => {
+const getServerSpecs = (role, params = {}) => {
     const specs = {
         cpu: '待定',
         memory: '待定',
@@ -81,32 +83,32 @@ const getServerSpecs = (role) => {
 
     switch (role) {
         case SERVER_TYPES.MANAGEMENT:
-            specs.cpu = '16C';
-            specs.memory = '32G';
+            specs.cpu = `${params.mngCpuCores || 16}C`;
+            specs.memory = `${params.mngMemory || 32}G`;
             specs.storage = '500G SSD';
             specs.network = '4*10GE';
             break;
         case SERVER_TYPES.COMPUTE:
-            specs.cpu = '32C';
-            specs.memory = '128G';
+            specs.cpu = `${params.calcCpuCores || 32}C`;
+            specs.memory = `${params.calcMemory || 128}G`;
             specs.storage = '500G SSD';
             specs.network = '4*10GE';
             break;
         case SERVER_TYPES.FUSION:
-            specs.cpu = '32C';
-            specs.memory = '128G';
+            specs.cpu = `${params.fusionCpuCores || 32}C`;
+            specs.memory = `${params.fusionMemory || 128}G`;
             specs.storage = '500G SSD + 4*2T HDD';
             specs.network = '4*10GE';
             break;
         case SERVER_TYPES.STORAGE:
-            specs.cpu = '16C';
-            specs.memory = '64G';
+            specs.cpu = `${params.storCpuCores || 16}C`;
+            specs.memory = `${params.storMemory || 64}G`;
             specs.storage = '500G SSD + 8*2T HDD';
             specs.network = '4*10GE';
             break;
         case SERVER_TYPES.CAG:
-            specs.cpu = '8C';
-            specs.memory = '16G';
+            specs.cpu = `${params.cagCpuCores || 8}C`;
+            specs.memory = `${params.cagMemory || 16}G`;
             specs.storage = '500G SSD';
             specs.network = '4*10GE';
             break;
@@ -133,7 +135,7 @@ const generateManagementServers = (params, ipManager) => {
         const cluIp = ipManager.getNextIp('storageCluster');
 
         servers.push(
-            createServerObject(hostname, SERVER_TYPES.MANAGEMENT, mngIp, bizIp, pubIp, cluIp, NOT_APPLICABLE_TEXT)
+            createServerObject(hostname, SERVER_TYPES.MANAGEMENT, mngIp, bizIp, pubIp, cluIp, NOT_APPLICABLE_TEXT, params)
         );
 
         // 在第2台管理服务器后生成浮动IP服务器条目（按照原始js1.txt逻辑）
@@ -152,7 +154,8 @@ const generateManagementServers = (params, ipManager) => {
                     bizFloatIp,
                     pubFloatIp,
                     cluFloatIp,
-                    NOT_APPLICABLE_TEXT
+                    NOT_APPLICABLE_TEXT,
+                    params
                 )
             );
 
@@ -170,7 +173,8 @@ const generateManagementServers = (params, ipManager) => {
                         NOT_APPLICABLE_TEXT,
                         cephPubFloatIp,
                         cephCluFloatIp,
-                        NOT_APPLICABLE_TEXT
+                        NOT_APPLICABLE_TEXT,
+                        params
                     )
                 );
             }
@@ -198,7 +202,7 @@ const generateComputeServers = (params, ipManager) => {
         const cluIp = NOT_APPLICABLE_TEXT; // 计算服务器不需要集群网
 
         servers.push(
-            createServerObject(hostname, SERVER_TYPES.COMPUTE, mngIp, bizIp, pubIp, cluIp, NOT_APPLICABLE_TEXT)
+            createServerObject(hostname, SERVER_TYPES.COMPUTE, mngIp, bizIp, pubIp, cluIp, NOT_APPLICABLE_TEXT, params)
         );
     }
 
@@ -223,7 +227,7 @@ const generateFusionServers = (params, ipManager) => {
         const cluIp = ipManager.getNextIp('storageCluster');
 
         servers.push(
-            createServerObject(hostname, SERVER_TYPES.FUSION, mngIp, bizIp, pubIp, cluIp, NOT_APPLICABLE_TEXT)
+            createServerObject(hostname, SERVER_TYPES.FUSION, mngIp, bizIp, pubIp, cluIp, NOT_APPLICABLE_TEXT, params)
         );
     }
 
@@ -248,7 +252,7 @@ const generateStorageServers = (params, ipManager) => {
         const cluIp = ipManager.getNextIp('storageCluster');
 
         servers.push(
-            createServerObject(hostname, SERVER_TYPES.STORAGE, mngIp, bizIp, pubIp, cluIp, NOT_APPLICABLE_TEXT)
+            createServerObject(hostname, SERVER_TYPES.STORAGE, mngIp, bizIp, pubIp, cluIp, NOT_APPLICABLE_TEXT, params)
         );
     }
 
@@ -272,7 +276,7 @@ const generateCAGServers = (params, ipManager) => {
         const pubIp = NOT_APPLICABLE_TEXT; // CAG服务器不需要存储网
         const cluIp = NOT_APPLICABLE_TEXT;
 
-        servers.push(createServerObject(hostname, SERVER_TYPES.CAG, mngIp, bizIp, pubIp, cluIp, NOT_APPLICABLE_TEXT));
+        servers.push(createServerObject(hostname, SERVER_TYPES.CAG, mngIp, bizIp, pubIp, cluIp, NOT_APPLICABLE_TEXT, params));
     }
 
     return servers;

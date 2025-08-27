@@ -357,6 +357,14 @@ const createIpPlanWorksheet = (
  * @param {Object} params - 参数配置
  */
 const createServerPerformanceWorksheet = (workbook, servers, params) => {
+    console.log('=== createServerPerformanceWorksheet DEBUG ===');
+    console.log('Received params:', JSON.stringify(params, null, 2));
+    console.log('mngCpuCores:', params?.mngCpuCores);
+    console.log('mngMemory:', params?.mngMemory);
+    console.log('mngSsdCount:', params?.mngSsdCount);
+    console.log('mngHddCount:', params?.mngHddCount);
+    console.log('============================================');
+    
     const worksheet = workbook.addWorksheet('服务器及桌面规格');
 
     // 设置标题行
@@ -1077,6 +1085,12 @@ const generateExcelFile = async (plan, mainWindow) => {
 
         // 创建工作表（IP总体规划放在最前面）
         const parameters = plan.metadata?.parameters || {};
+        console.log('=== generateExcelFile DEBUG ===');
+        console.log('plan.metadata:', JSON.stringify(plan.metadata, null, 2));
+        console.log('parameters:', JSON.stringify(parameters, null, 2));
+        console.log('parameters.mngCpuCores:', parameters.mngCpuCores);
+        console.log('parameters.mngMemory:', parameters.mngMemory);
+        console.log('================================');
         const ipRanges = {
             mngIpRange: parameters.mngIpRange,
             bizIpRange: parameters.bizIpRange,

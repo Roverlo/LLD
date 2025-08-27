@@ -2,12 +2,76 @@
  * 渲染进程主文件 (重构版)
  */
 
-// --- 应用状态管理 ---
+// --- 全局常量 ---
 const AppState = {
     isGenerating: false,
     lastParams: null,
-    validationErrors: [],
 };
+
+// ESLint 魔法数字常量
+const CONSTANTS = {
+    // 时间相关
+    STATUS_CLEAR_DELAY: 5000,
+    ANIMATION_DELAY: 1000,
+    RIPPLE_INTERVAL: 100,
+    RIPPLE_LIFETIME: 3000,
+    CUSTOM_SELECT_DELAY: 200,
+    
+    // 用户量阈值
+    USER_COUNT_THRESHOLD: 5000,
+    
+    // OSD预留容量比例
+    OSD_RESERVED_RATIO: 0.9,
+    
+    // 涟漪效果
+    MAX_RIPPLES: 8,
+    CLICK_RIPPLE_SIZE: 200,
+    NORMAL_RIPPLE_SIZE: 120,
+    CLICK_RIPPLE_SPEED: 3,
+    NORMAL_RIPPLE_SPEED: 2,
+    RIPPLE_GRADIENT_STOP: 0.7,
+    RIPPLE_OPACITY_FACTOR: 0.6,
+    RIPPLE_LINE_WIDTH: 2,
+    RIPPLE_INNER_RADIUS_FACTOR: 0.8,
+    
+    // 虚机默认配置
+    DEFAULT_VM_CPU: 4,
+    DEFAULT_VM_MEMORY: 8,
+    DEFAULT_VM_STORAGE: 200,
+    DEFAULT_VM_COUNT: 0,
+    
+    // ASCII码
+    ASCII_A: 65,
+    
+    // 进制
+    DECIMAL_RADIX: 10,
+    
+    // 存储相关
+    DEFAULT_SSD_COUNT: 2,
+    DEFAULT_HDD_COUNT: 4,
+    
+    // 硬件配置
+    DEFAULT_CPU_CORES: 32,
+    DEFAULT_MEMORY_SIZE: 128,
+    DEFAULT_MNG_CPU_CORES: 32,
+    DEFAULT_MNG_MEMORY_GB: 128,
+    DEFAULT_MON_CPU_CORES: 64,
+    DEFAULT_MON_MEMORY_GB: 256,
+    DEFAULT_OSD_CPU_CORES: 64,
+    DEFAULT_OSD_MEMORY_GB: 256,
+    DEFAULT_RGW_CPU_CORES: 32,
+    DEFAULT_RGW_MEMORY_GB: 64,
+    DEFAULT_MDS_CPU_CORES: 16,
+    DEFAULT_MDS_MEMORY_GB: 64,
+    
+    // 数学常量
+    FULL_CIRCLE_RADIANS: 2
+};
+
+// --- 应用状态管理 ---
+// const AppStateExtended = {
+//     validationErrors: []
+// };
 
 // --- DOM元素缓存 ---
 const Elements = {
@@ -100,10 +164,11 @@ const Utils = {
      */
     showStatus(message, type = 'info') {
         if (!Elements.statusDiv) {
-            console.error('状态元素未找到');
+            // 状态元素未找到
             return;
         }
 
+        // Debug: Showing status message
         Elements.statusDiv.textContent = message;
         Elements.statusDiv.className = `status ${type}`;
 
@@ -120,7 +185,7 @@ const Utils = {
                     Elements.statusDiv.className = 'status';
                     Elements.statusDiv.style.display = 'none';
                 }
-            }, 5000);
+            }, CONSTANTS.STATUS_CLEAR_DELAY);
         }
         // success、warning、error 消息持续显示，直到下次更新
     },
@@ -143,8 +208,8 @@ const Utils = {
      * @returns {string} 格式化后的时间
      */
     formatDuration(ms) {
-        if (ms < 1000) return `${ms}ms`;
-        return `${(ms / 1000).toFixed(1)}s`;
+        if (ms < CONSTANTS.ANIMATION_DELAY) return `${ms}ms`;
+        return `${(ms / CONSTANTS.ANIMATION_DELAY).toFixed(1)}s`;
     },
 };
 
@@ -191,13 +256,13 @@ const ParamCollector = {
             storageSecurity: Utils.getFormValue('storageSecurity', 'string'),
 
             // 服务器配置信息
-            ssdCount: Utils.getFormValue('ssdCount', 'number', 2),
+            ssdCount: Utils.getFormValue('ssdCount', 'number', CONSTANTS.DEFAULT_SSD_COUNT),
             ssdSpec: Utils.getFormValue('ssdSpec', 'string', '1.92TB'),
             osdReservedSize: Utils.getFormValue('osdReservedSize', 'number', 0),
-            hddCount: Utils.getFormValue('hddCount', 'number', 4),
+            hddCount: Utils.getFormValue('hddCount', 'number', CONSTANTS.DEFAULT_HDD_COUNT),
             hddSpec: Utils.getFormValue('hddSpec', 'string', '8TB'),
-            cpuCores: Utils.getFormValue('cpuCores', 'number', 32),
-            memorySize: Utils.getFormValue('memorySize', 'number', 128),
+            cpuCores: Utils.getFormValue('cpuCores', 'number', CONSTANTS.DEFAULT_CPU_CORES),
+            memorySize: Utils.getFormValue('memorySize', 'number', CONSTANTS.DEFAULT_MEMORY_SIZE),
 
             // IP地址范围
             mngIpRange: Utils.getFormValue('mngIpRange', 'string'),
@@ -234,10 +299,10 @@ const ParamCollector = {
 
         vmTypeElements.forEach((element) => {
             const type = element.dataset.type;
-            const cpu = parseInt(element.querySelector('.vm-cpu').value, 10) || 0;
-            const memory = parseInt(element.querySelector('.vm-memory').value, 10) || 0;
-            const storage = parseInt(element.querySelector('.vm-storage').value, 10) || 0;
-            const count = parseInt(element.querySelector('.vm-count').value, 10) || 0;
+            const cpu = parseInt(element.querySelector('.vm-cpu').value, CONSTANTS.DECIMAL_RADIX) || 0;
+            const memory = parseInt(element.querySelector('.vm-memory').value, CONSTANTS.DECIMAL_RADIX) || 0;
+            const storage = parseInt(element.querySelector('.vm-storage').value, CONSTANTS.DECIMAL_RADIX) || 0;
+            const count = parseInt(element.querySelector('.vm-count').value, CONSTANTS.DECIMAL_RADIX) || 0;
 
             if (cpu > 0 && memory > 0 && storage > 0 && count > 0) {
                 vmTypes.push({
@@ -302,12 +367,12 @@ const ParamValidator = {
                 message: 'Ceph管理双机需先启用管理节点双机，已帮您修改"Ceph管理双机"选项为"否"，请再次点击生成。',
             },
             {
-                condition: params.userCount > 5000 && params.insightDeployType === '非高可用部署',
+                condition: params.userCount > CONSTANTS.USER_COUNT_THRESHOLD && params.insightDeployType === '非高可用部署',
                 fix: () => {
                     Utils.setFormValue('insightDeployType', '高可用部署');
                     corrected = true;
                 },
-                message: '用户量 > 5000 时，Insight 只能选择"高可用部署"，已帮您修改，请再次点击生成。',
+                message: `用户量 > ${CONSTANTS.USER_COUNT_THRESHOLD} 时，Insight 只能选择"高可用部署"，已帮您修改，请再次点击生成。`,
             },
             {
                 condition: !params.isFusionNode && params.isMngAsFusion,
@@ -325,7 +390,7 @@ const ParamValidator = {
                         const ssdSpecMatch = params.ssdSpec.match(/(\d+\.?\d*)/);
                         if (ssdSpecMatch) {
                             const ssdCapacity = parseFloat(ssdSpecMatch[1]);
-                            const maxReserved = ssdCapacity * 0.9;
+                            const maxReserved = ssdCapacity * CONSTANTS.OSD_RESERVED_RATIO;
                             return params.osdReservedSize > maxReserved;
                         }
                     }
@@ -400,17 +465,12 @@ const BackgroundEffect = {
      */
     init() {
         if (!Elements.canvas) {
-            // eslint-disable-next-line no-console
-            console.warn('Canvas element not found for ripple effect.');
             return;
         }
 
         this.setupCanvas();
         this.bindEvents();
         this.startAnimation();
-
-        // eslint-disable-next-line no-console
-        console.log('白圈涟漪特效已初始化');
     },
 
     /**
@@ -432,7 +492,7 @@ const BackgroundEffect = {
      */
     bindEvents() {
         let lastRippleTime = 0;
-        const rippleInterval = 100; // 涟漪创建间隔
+        const rippleInterval = CONSTANTS.RIPPLE_INTERVAL; // 涟漪创建间隔
 
         // 鼠标移动事件
         document.addEventListener('mousemove', (e) => {
@@ -454,7 +514,7 @@ const BackgroundEffect = {
      */
     createRipple(x, y, isClick = false) {
         // 限制涟漪数量
-        if (this.ripples.length > 8) {
+        if (this.ripples.length > CONSTANTS.MAX_RIPPLES) {
             this.ripples.shift();
         }
 
@@ -462,9 +522,9 @@ const BackgroundEffect = {
             x: x,
             y: y,
             radius: 0,
-            maxRadius: isClick ? 200 : 120,
+            maxRadius: isClick ? CONSTANTS.CLICK_RIPPLE_SIZE : CONSTANTS.NORMAL_RIPPLE_SIZE,
             opacity: 1,
-            speed: isClick ? 3 : 2,
+            speed: isClick ? CONSTANTS.CLICK_RIPPLE_SPEED : CONSTANTS.NORMAL_RIPPLE_SPEED,
             createdAt: Date.now(),
         });
     },
@@ -479,7 +539,7 @@ const BackgroundEffect = {
             ripple.opacity = Math.max(0, 1 - ripple.radius / ripple.maxRadius);
 
             // 移除完全透明或过期的涟漪
-            return ripple.opacity > 0 && now - ripple.createdAt < 3000;
+            return ripple.opacity > 0 && now - ripple.createdAt < CONSTANTS.RIPPLE_LIFETIME;
         });
     },
 
@@ -493,23 +553,23 @@ const BackgroundEffect = {
         this.ripples.forEach((ripple) => {
             if (ripple.radius > 0 && ripple.opacity > 0) {
                 ctx.beginPath();
-                ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
+                ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * CONSTANTS.FULL_CIRCLE_RADIANS);
 
                 // 创建渐变效果
                 const gradient = ctx.createRadialGradient(
                     ripple.x,
                     ripple.y,
-                    ripple.radius * 0.8,
+                    ripple.radius * CONSTANTS.RIPPLE_INNER_RADIUS_FACTOR,
                     ripple.x,
                     ripple.y,
                     ripple.radius
                 );
                 gradient.addColorStop(0, `rgba(255, 255, 255, 0)`);
-                gradient.addColorStop(0.7, `rgba(255, 255, 255, ${ripple.opacity * 0.6})`);
+                gradient.addColorStop(CONSTANTS.RIPPLE_GRADIENT_STOP, `rgba(255, 255, 255, ${ripple.opacity * CONSTANTS.RIPPLE_OPACITY_FACTOR})`);
                 gradient.addColorStop(1, `rgba(255, 255, 255, ${ripple.opacity})`);
 
                 ctx.strokeStyle = gradient;
-                ctx.lineWidth = 2;
+                ctx.lineWidth = CONSTANTS.RIPPLE_LINE_WIDTH;
                 ctx.stroke();
             }
         });
@@ -562,7 +622,7 @@ const App = {
             this.initCustomSelects();
             // 在自定义下拉框完全初始化后再执行条件禁用逻辑
             this.initConditionalDisabling();
-        }, 200);
+        }, CONSTANTS.CUSTOM_SELECT_DELAY);
 
         // 初始化背景效果
         BackgroundEffect.init();
@@ -573,8 +633,7 @@ const App = {
         // 绑定事件监听器
         this.bindEvents();
 
-        // eslint-disable-next-line no-console
-        console.log('渲染进程应用初始化完成');
+        // 渲染进程应用初始化完成
     },
 
     /**
@@ -610,16 +669,12 @@ const App = {
         });
 
         const selectWrappers = document.querySelectorAll('.custom-select-wrapper');
-        console.log('初始化下拉框数量:', selectWrappers.length);
 
-        selectWrappers.forEach((wrapper, index) => {
+        selectWrappers.forEach((wrapper) => {
             const originalSelect = wrapper.querySelector('select');
             if (!originalSelect) {
-                console.log('下拉框', index + 1, '没有找到select元素');
                 return;
             }
-
-            console.log('处理下拉框', index + 1, ':', originalSelect.id);
 
             // 创建自定义下拉框容器
             const customSelect = document.createElement('div');
@@ -638,7 +693,7 @@ const App = {
             itemsDiv.className = 'select-items select-hide';
 
             // 为每个选项创建div
-            Array.from(originalSelect.options).forEach((option, index) => {
+            Array.from(originalSelect.options).forEach((option, optionIndex) => {
                 const optionDiv = document.createElement('div');
                 optionDiv.textContent = option.text;
                 optionDiv.dataset.value = option.value;
@@ -652,7 +707,7 @@ const App = {
                     e.stopPropagation();
 
                     // 更新原始select的值
-                    originalSelect.selectedIndex = index;
+                    originalSelect.selectedIndex = optionIndex;
                     originalSelect.dispatchEvent(new Event('change'));
 
                     // 更新显示文本
@@ -717,10 +772,10 @@ const App = {
         const items = document.querySelectorAll('.select-items');
         const selected = document.querySelectorAll('.select-selected');
 
-        items.forEach((item, index) => {
-            if (elmnt !== selected[index]) {
+        items.forEach((item, itemIndex) => {
+            if (elmnt !== selected[itemIndex]) {
                 item.classList.add('select-hide');
-                selected[index].classList.remove('select-arrow-active');
+                selected[itemIndex].classList.remove('select-arrow-active');
             }
         });
     },
@@ -881,10 +936,10 @@ const App = {
             const storageServerPrefixInput = document.getElementById('prefixStor');
             
             // 管理服务器配置信息中的字段
-            const mgmtSsdCountInput = document.getElementById('mgmtSsdCount');
+            const mgmtSsdCountInput = document.getElementById('mngSsdCount');
             const mgmtSsdSpecInput = document.getElementById('mgmtSsdSpec');
             const mgmtOsdInput = document.getElementById('mgmtOsdReservedSize');
-            const mgmtHddCountInput = document.getElementById('mgmtHddCount');
+            const mgmtHddCountInput = document.getElementById('mngHddCount');
             const mgmtHddSpecInput = document.getElementById('mgmtHddSpec');
             
             // 计算（超融合）服务器配置信息中的字段
@@ -945,7 +1000,7 @@ const App = {
                     enableMgmtFields: ${enableMgmtFields}<br>
                     disableComputeFields: ${disableComputeFields}<br>
                     存储服务器配置信息fieldset found: ${storageFieldset ? 'Yes' : 'No'}<br>
-                    管理服务器字段状态: mgmtSsdCount(${mgmtSsdCountInput ? 'found' : 'not found'}), mgmtSsdSpec(${mgmtSsdSpecInput ? 'found' : 'not found'}), mgmtOsd(${mgmtOsdInput ? 'found' : 'not found'}), mgmtHddCount(${mgmtHddCountInput ? 'found' : 'not found'}), mgmtHddSpec(${mgmtHddSpecInput ? 'found' : 'not found'})<br>
+                    管理服务器字段状态: mngSsdCount(${mgmtSsdCountInput ? 'found' : 'not found'}), mgmtSsdSpec(${mgmtSsdSpecInput ? 'found' : 'not found'}), mgmtOsd(${mgmtOsdInput ? 'found' : 'not found'}), mngHddCount(${mgmtHddCountInput ? 'found' : 'not found'}), mgmtHddSpec(${mgmtHddSpecInput ? 'found' : 'not found'})<br>
                     计算服务器字段状态: computeSsdCount(${computeSsdCountInput ? 'found' : 'not found'}), computeSsdSpec(${computeSsdSpecInput ? 'found' : 'not found'}), computeOsd(${computeOsdInput ? 'found' : 'not found'}), computeHddCount(${computeHddCountInput ? 'found' : 'not found'}), computeHddSpec(${computeHddSpecInput ? 'found' : 'not found'})
                 `;
             }
@@ -1095,7 +1150,7 @@ const DesktopVmManager = {
      */
     addVmType() {
         const container = document.getElementById('desktopVmTypes');
-        const typeChar = String.fromCharCode(65 + this.nextTypeIndex); // A=65, D=68, E=69...
+        const typeChar = String.fromCharCode(CONSTANTS.ASCII_A + this.nextTypeIndex); // A=65, D=68, E=69...
 
         const vmTypeDiv = document.createElement('div');
         vmTypeDiv.className = 'desktop-vm-type';
@@ -1108,19 +1163,19 @@ const DesktopVmManager = {
             <div class="vm-spec-grid">
                 <div class="vm-spec-row">
                     <label>CPU核数:</label>
-                    <input type="number" class="vm-cpu" min="1" value="4" />
+                    <input type="number" class="vm-cpu" min="1" value="${CONSTANTS.DEFAULT_VM_CPU}" />
                 </div>
                 <div class="vm-spec-row">
                     <label>内存(GB):</label>
-                    <input type="number" class="vm-memory" min="1" value="8" />
+                    <input type="number" class="vm-memory" min="1" value="${CONSTANTS.DEFAULT_VM_MEMORY}" />
                 </div>
                 <div class="vm-spec-row">
                     <label>存储(GB):</label>
-                    <input type="number" class="vm-storage" min="1" value="200" />
+                    <input type="number" class="vm-storage" min="1" value="${CONSTANTS.DEFAULT_VM_STORAGE}" />
                 </div>
                 <div class="vm-spec-row">
                     <label>数量:</label>
-                    <input type="number" class="vm-count" min="0" value="0" />
+                    <input type="number" class="vm-count" min="0" value="${CONSTANTS.DEFAULT_VM_COUNT}" />
                 </div>
             </div>
             <small class="form-hint">CPU核数、内存大小、存储大小和虚机数量 <button type="button" class="remove-vm-type-btn" onclick="DesktopVmManager.removeVmType('${typeChar}')">删除</button></small>
@@ -1175,7 +1230,7 @@ const DesktopVmManager = {
 
         vmTypes.forEach((vmType) => {
             const currentType = vmType.dataset.type;
-            const newType = String.fromCharCode(65 + currentIndex); // A=65, B=66, C=67...
+            const newType = String.fromCharCode(CONSTANTS.ASCII_A + currentIndex); // A=65, B=66, C=67...
 
             if (currentType !== newType) {
                 // 更新data-type属性

@@ -180,6 +180,11 @@ function generatePlan(inputParams) {
         const servers = generateAllServers(params, ipManager);
 
         // 7. 生成虚机规划
+        console.log('[DEBUG] generatePlan - 调用generateAllVms前的参数:');
+        console.log('[DEBUG] params.insightDeployType:', params.insightDeployType);
+        console.log('[DEBUG] params.userCount:', params.userCount);
+        console.log('[DEBUG] params.deployTerminalMgmt:', params.deployTerminalMgmt);
+        
         const vms = generateAllVms(params, ipManager);
 
         // 8. 生成存储规划

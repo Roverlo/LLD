@@ -438,11 +438,11 @@
                             <legend>管理服务器配置信息</legend>
                             <div class="form-group aligned-form server-config-item">
                                 <div class="label-row">
-                                    <label for="mgmtSsdCount">SSD盘（非系统盘）数量:</label>
+                                    <label for="mngSsdCount">SSD盘（非系统盘）数量:</label>
                                     <label for="mgmtSsdSpec">规格（TB）:</label>
                                 </div>
                                 <div class="input-row">
-                                    <input type="number" id="mgmtSsdCount" min="0" value="2" />
+                                    <input type="number" id="mngSsdCount" min="0" value="2" />
                                     <input type="text" id="mgmtSsdSpec" placeholder="如: 1.92" value="1.92" />
                                 </div>
                                 <small class="form-hint">每台服务器的SSD硬盘数量和规格</small>
@@ -466,23 +466,23 @@
                             </div>
                             <div class="form-group aligned-form server-config-item">
                                 <div class="label-row">
-                                    <label for="mgmtHddCount">HDD盘数量:</label>
+                                    <label for="mngHddCount">HDD盘数量:</label>
                                     <label for="mgmtHddSpec">规格（TB）:</label>
                                 </div>
                                 <div class="input-row">
-                                    <input type="number" id="mgmtHddCount" min="0" value="4" />
+                                    <input type="number" id="mngHddCount" min="0" value="4" />
                                     <input type="text" id="mgmtHddSpec" placeholder="如: 8" value="8" />
                                 </div>
                                 <small class="form-hint">每台服务器的HDD硬盘数量和规格</small>
                             </div>
                             <div class="form-group aligned-form server-config-item">
                                 <div class="label-row">
-                                    <label for="mgmtCpuCores">CPU核数:</label>
-                                    <label for="mgmtMemorySize">内存大小(GB):</label>
+                                    <label for="mngCpuCores">CPU核数:</label>
+                                    <label for="mngMemory">内存大小(GB):</label>
                                 </div>
                                 <div class="input-row">
-                                    <input type="number" id="mgmtCpuCores" min="1" value="32" />
-                                    <input type="number" id="mgmtMemorySize" min="1" value="1024" />
+                                    <input type="number" id="mngCpuCores" min="1" value="32" />
+                                    <input type="number" id="mngMemory" min="1" value="128" />
                                 </div>
                                 <small class="form-hint">每台服务器的CPU核心数和内存大小</small>
                             </div>
@@ -492,21 +492,21 @@
                             <legend>计算（超融合）服务器配置信息</legend>
                             <div class="form-group aligned-form server-config-item">
                                 <div class="label-row">
-                                    <label for="computeSsdCount">SSD盘（非系统盘）数量:</label>
-                                    <label for="computeSsdSpec">规格（TB）:</label>
+                                    <label for="fusionSsdCount">SSD盘（非系统盘）数量:</label>
+                                    <label for="fusionSsdSpec">规格（TB）:</label>
                                 </div>
                                 <div class="input-row">
-                                    <input type="number" id="computeSsdCount" min="0" value="2" />
-                                    <input type="text" id="computeSsdSpec" placeholder="如: 1.92" value="1.92" />
+                                    <input type="number" id="fusionSsdCount" min="0" value="2" />
+                                    <input type="text" id="fusionSsdSpec" placeholder="如: 1.92" value="1.92" />
                                 </div>
                                 <small class="form-hint">每台服务器的SSD硬盘数量和规格</small>
                             </div>
                             <div class="form-group server-config-item">
-                                <label for="computeOsdReservedSize">单盘OSD预留大小（SSD资源紧张时启用）:</label>
+                                <label for="fusionOsdReservedSize">单盘OSD预留大小（SSD资源紧张时启用）:</label>
                                 <div class="inline-input-with-unit">
                                     <input
                                         type="number"
-                                        id="computeOsdReservedSize"
+                                        id="fusionOsdReservedSize"
                                         min="0"
                                         step="0.01"
                                         value="0"
@@ -520,23 +520,23 @@
                             </div>
                             <div class="form-group aligned-form server-config-item">
                                 <div class="label-row">
-                                    <label for="computeHddCount">HDD盘数量:</label>
-                                    <label for="computeHddSpec">规格（TB）:</label>
+                                    <label for="fusionHddCount">HDD盘数量:</label>
+                                    <label for="fusionHddSpec">规格（TB）:</label>
                                 </div>
                                 <div class="input-row">
-                                    <input type="number" id="computeHddCount" min="0" value="4" />
-                                    <input type="text" id="computeHddSpec" placeholder="如: 8" value="8" />
+                                    <input type="number" id="fusionHddCount" min="0" value="4" />
+                                    <input type="text" id="fusionHddSpec" placeholder="如: 8" value="8" />
                                 </div>
                                 <small class="form-hint">每台服务器的HDD硬盘数量和规格</small>
                             </div>
                             <div class="form-group aligned-form server-config-item">
                                 <div class="label-row">
-                                    <label for="computeCpuCores">CPU核数:</label>
-                                    <label for="computeMemorySize">内存大小(GB):</label>
+                                    <label for="fusionCpuCores">CPU核数:</label>
+                                    <label for="fusionMemory">内存大小(GB):</label>
                                 </div>
                                 <div class="input-row">
-                                    <input type="number" id="computeCpuCores" min="1" value="32" />
-                                    <input type="number" id="computeMemorySize" min="1" value="1024" />
+                                    <input type="number" id="fusionCpuCores" min="1" value="64" />
+                                    <input type="number" id="fusionMemory" min="1" value="256" />
                                 </div>
                                 <small class="form-hint">每台服务器的CPU核心数和内存大小</small>
                             </div>
@@ -546,21 +546,21 @@
                             <legend>存储服务器配置信息</legend>
                             <div class="form-group aligned-form server-config-item">
                                 <div class="label-row">
-                                    <label for="ssdCount">SSD盘（非系统盘）数量:</label>
-                                    <label for="ssdSpec">规格（TB）:</label>
+                                    <label for="storSsdCount">SSD盘（非系统盘）数量:</label>
+                                    <label for="storSsdSpec">规格（TB）:</label>
                                 </div>
                                 <div class="input-row">
-                                    <input type="number" id="ssdCount" min="0" value="2" />
-                                    <input type="text" id="ssdSpec" placeholder="如: 1.92" value="1.92" />
+                                    <input type="number" id="storSsdCount" min="0" value="2" />
+                                    <input type="text" id="storSsdSpec" placeholder="如: 1.92" value="1.92" />
                                 </div>
                                 <small class="form-hint">每台服务器的SSD硬盘数量和规格</small>
                             </div>
                             <div class="form-group server-config-item">
-                                <label for="osdReservedSize">单盘OSD预留大小（SSD资源紧张时启用）:</label>
+                                <label for="storOsdReservedSize">单盘OSD预留大小（SSD资源紧张时启用）:</label>
                                 <div class="inline-input-with-unit">
                                     <input
                                         type="number"
-                                        id="osdReservedSize"
+                                        id="storOsdReservedSize"
                                         min="0"
                                         step="0.01"
                                         value="0"
@@ -574,23 +574,23 @@
                             </div>
                             <div class="form-group aligned-form server-config-item">
                                 <div class="label-row">
-                                    <label for="hddCount">HDD盘数量:</label>
-                                    <label for="hddSpec">规格（TB）:</label>
+                                    <label for="storHddCount">HDD盘数量:</label>
+                                    <label for="storHddSpec">规格（TB）:</label>
                                 </div>
                                 <div class="input-row">
-                                    <input type="number" id="hddCount" min="0" value="4" />
-                                    <input type="text" id="hddSpec" placeholder="如: 8" value="8" />
+                                    <input type="number" id="storHddCount" min="0" value="4" />
+                                    <input type="text" id="storHddSpec" placeholder="如: 8" value="8" />
                                 </div>
                                 <small class="form-hint">每台服务器的HDD硬盘数量和规格</small>
                             </div>
                             <div class="form-group aligned-form server-config-item">
                                 <div class="label-row">
-                                    <label for="cpuCores">CPU核数:</label>
-                                    <label for="memorySize">内存大小(GB):</label>
+                                    <label for="storCpuCores">CPU核数:</label>
+                                    <label for="storMemory">内存大小(GB):</label>
                                 </div>
                                 <div class="input-row">
-                                    <input type="number" id="cpuCores" min="1" value="32" />
-                                    <input type="number" id="memorySize" min="1" value="1024" />
+                                    <input type="number" id="storCpuCores" min="1" value="32" />
+                                    <input type="number" id="storMemory" min="1" value="1024" />
                                 </div>
                                 <small class="form-hint">每台服务器的CPU核心数和内存大小</small>
                             </div>

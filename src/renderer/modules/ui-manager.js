@@ -1,5 +1,8 @@
+// 默认服务器数量常量
+const DEFAULT_SERVER_COUNT = 3;
+
 /**
- * UI交互管理器
+ * UI管理器
  */
 export const UIManager = {
     /**
@@ -57,7 +60,7 @@ export const UIManager = {
             const select = document.getElementById(id);
             if (select) {
                 select.addEventListener('change', () => {
-                    this.updateBondingMode(id, select.value);
+                    this.updateBondingMode();
                 });
             }
         });
@@ -65,13 +68,11 @@ export const UIManager = {
 
     /**
      * 更新网卡绑定模式相关的UI
-     * @param {string} bondId - 变化的绑定ID
-     * @param {string} selectedMode - 选择的模式
      */
-    updateBondingMode(bondId, selectedMode) {
+    updateBondingMode() {
         // 在这里可以添加基于绑定模式更新UI的逻辑
         // 例如，如果某种模式需要额外的输入字段，可以在这里控制它们的显示和隐藏
-        console.log(`Bonding mode for ${bondId} changed to ${selectedMode}`);
+        // 绑定模式已更新
     },
 
     /**
@@ -103,9 +104,9 @@ export const UIManager = {
             architectureMode.style.color = isFusion ? '#28a745' : '#dc3545';
         }
 
-        setSectionState('fusionServerSection', 'fusionStatus', 'countFusion', isFusion, isFusion ? 3 : 0);
-        setSectionState('computeServerSection', 'calcStatus', 'countCalc', !isFusion, isFusion ? 0 : 3);
-        setSectionState('storageServerSection', 'storStatus', 'countStor', !isFusion, isFusion ? 0 : 3);
+        setSectionState('fusionServerSection', 'fusionStatus', 'countFusion', isFusion, isFusion ? DEFAULT_SERVER_COUNT : 0);
+        setSectionState('computeServerSection', 'calcStatus', 'countCalc', !isFusion, isFusion ? 0 : DEFAULT_SERVER_COUNT);
+        setSectionState('storageServerSection', 'storStatus', 'countStor', !isFusion, isFusion ? 0 : DEFAULT_SERVER_COUNT);
     },
 
     /**
@@ -190,13 +191,12 @@ export const UIManager = {
     },
 
     openTab(evt, tabName) {
-        var i, tabcontent, tablinks;
-        tabcontent = document.getElementsByClassName("tab-content");
-        for (i = 0; i < tabcontent.length; i++) {
+        const tabcontent = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < tabcontent.length; i++) {
             tabcontent[i].style.display = "none";
         }
-        tablinks = document.getElementsByClassName("tab-link");
-        for (i = 0; i < tablinks.length; i++) {
+        const tablinks = document.getElementsByClassName("tab-link");
+        for (let i = 0; i < tablinks.length; i++) {
             tablinks[i].className = tablinks[i].className.replace(" active", "");
         }
         document.getElementById(tabName).style.display = "block";
