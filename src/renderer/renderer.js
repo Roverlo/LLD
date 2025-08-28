@@ -2,6 +2,9 @@
  * 渲染进程主文件 (重构版)
  */
 
+// --- 模块导入 ---
+import { Utils } from './modules/utils.js';
+
 // --- 全局常量 ---
 const AppState = {
     isGenerating: false,
@@ -89,129 +92,7 @@ const Elements = {
     },
 };
 
-// --- 工具函数 ---
-const Utils = {
-    /**
-     * 获取表单元素的值
-     * @param {string} id - 元素ID
-     * @param {string} type - 值类型 ('string', 'number', 'boolean')
-     * @param {*} defaultValue - 默认值
-     * @returns {*} 元素值
-     */
-    getFormValue(id, type = 'string', defaultValue = '') {
-        const element = document.getElementById(id);
-        if (!element) return defaultValue;
-
-        switch (type) {
-            case 'number':
-                return parseFloat(element.value) || defaultValue;
-            case 'boolean':
-                return element.value === 'true';
-            case 'string':
-            default:
-                return element.value || defaultValue;
-        }
-    },
-
-    /**
-     * 设置表单元素的值
-     * @param {string} id - 元素ID
-     * @param {*} value - 值
-     */
-    setFormValue(id, value) {
-        const element = document.getElementById(id);
-        if (element) {
-            element.value = value;
-
-            // 如果是select元素，同时更新自定义下拉框的显示
-            if (element.tagName === 'SELECT') {
-                this.updateCustomSelectDisplay(element);
-            }
-        }
-    },
-
-    /**
-     * 更新自定义下拉框的显示
-     * @param {HTMLSelectElement} selectElement - 原始select元素
-     */
-    updateCustomSelectDisplay(selectElement) {
-        const wrapper = selectElement.closest('.custom-select-wrapper');
-        if (wrapper && wrapper.classList.contains('has-custom')) {
-            const customSelect = wrapper.querySelector('.custom-select');
-            const selectedDiv = customSelect?.querySelector('.select-selected');
-
-            if (selectedDiv) {
-                // 更新显示的文本
-                const selectedOption = selectElement.options[selectElement.selectedIndex];
-                selectedDiv.textContent = selectedOption ? selectedOption.text : '';
-
-                // 更新选项的选中状态
-                const items = customSelect.querySelectorAll('.select-items div');
-                items.forEach((item, index) => {
-                    item.classList.remove('same-as-selected');
-                    if (index === selectElement.selectedIndex) {
-                        item.classList.add('same-as-selected');
-                    }
-                });
-            }
-        }
-    },
-
-    /**
-     * 显示状态消息
-     * @param {string} message - 消息内容
-     * @param {string} type - 消息类型 ('info', 'success', 'warning', 'error')
-     */
-    showStatus(message, type = 'info') {
-        if (!Elements.statusDiv) {
-            // 状态元素未找到
-            return;
-        }
-
-        // Debug: Showing status message
-        Elements.statusDiv.textContent = message;
-        Elements.statusDiv.className = `status ${type}`;
-
-        // 确保元素可见
-        Elements.statusDiv.style.display = 'block';
-
-        // 成功消息持续显示，不自动清除
-        // 只有信息消息（如"正在生成中..."）才自动清除
-        if (type === 'info') {
-            setTimeout(() => {
-                // 只有当前还是info状态时才清除（避免覆盖后续的成功/错误消息）
-                if (Elements.statusDiv.className.includes('info')) {
-                    Elements.statusDiv.textContent = '';
-                    Elements.statusDiv.className = 'status';
-                    Elements.statusDiv.style.display = 'none';
-                }
-            }, CONSTANTS.STATUS_CLEAR_DELAY);
-        }
-        // success、warning、error 消息持续显示，直到下次更新
-    },
-
-    /**
-     * 设置按钮状态
-     * @param {boolean} disabled - 是否禁用
-     * @param {string} text - 按钮文本
-     */
-    setButtonState(disabled, text) {
-        if (!Elements.submitButton) return;
-
-        Elements.submitButton.disabled = disabled;
-        Elements.submitButton.textContent = text;
-    },
-
-    /**
-     * 格式化时间
-     * @param {number} ms - 毫秒数
-     * @returns {string} 格式化后的时间
-     */
-    formatDuration(ms) {
-        if (ms < CONSTANTS.ANIMATION_DELAY) return `${ms}ms`;
-        return `${(ms / CONSTANTS.ANIMATION_DELAY).toFixed(1)}s`;
-    },
-};
+// --- 工具函数 (现在从utils.js模块导入) ---
 
 // --- 参数收集器 ---
 const ParamCollector = {
@@ -255,14 +136,32 @@ const ParamCollector = {
             downloadType: Utils.getFormValue('downloadType', 'string'),
             storageSecurity: Utils.getFormValue('storageSecurity', 'string'),
 
-            // 服务器配置信息
-            ssdCount: Utils.getFormValue('ssdCount', 'number', CONSTANTS.DEFAULT_SSD_COUNT),
-            ssdSpec: Utils.getFormValue('ssdSpec', 'string', '1.92TB'),
-            osdReservedSize: Utils.getFormValue('osdReservedSize', 'number', 0),
-            hddCount: Utils.getFormValue('hddCount', 'number', CONSTANTS.DEFAULT_HDD_COUNT),
-            hddSpec: Utils.getFormValue('hddSpec', 'string', '8TB'),
-            cpuCores: Utils.getFormValue('cpuCores', 'number', CONSTANTS.DEFAULT_CPU_CORES),
-            memorySize: Utils.getFormValue('memorySize', 'number', CONSTANTS.DEFAULT_MEMORY_SIZE),
+            // 管理服务器配置信息
+            mngCpuCores: Utils.getFormValue('mngCpuCores', 'number', 32),
+            mngMemory: Utils.getFormValue('mngMemory', 'number', 128),
+            mngSsdCount: Utils.getFormValue('mngSsdCount', 'number', 2),
+            mgmtSsdSpec: Utils.getFormValue('mgmtSsdSpec', 'string', '1.92TB'),
+            mgmtOsdReservedSize: Utils.getFormValue('mgmtOsdReservedSize', 'number', 0),
+            mngHddCount: Utils.getFormValue('mngHddCount', 'number', 4),
+            mgmtHddSpec: Utils.getFormValue('mgmtHddSpec', 'string', '8TB'),
+
+            // 超融合/计算服务器配置信息
+            fusionCpuCores: Utils.getFormValue('fusionCpuCores', 'number', 64),
+            fusionMemory: Utils.getFormValue('fusionMemory', 'number', 256),
+            fusionSsdCount: Utils.getFormValue('fusionSsdCount', 'number', 2),
+            fusionSsdSpec: Utils.getFormValue('fusionSsdSpec', 'string', '1.92TB'),
+            fusionOsdReservedSize: Utils.getFormValue('fusionOsdReservedSize', 'number', 0),
+            fusionHddCount: Utils.getFormValue('fusionHddCount', 'number', 4),
+            fusionHddSpec: Utils.getFormValue('fusionHddSpec', 'string', '8TB'),
+
+            // 存储服务器配置信息
+            storCpuCores: Utils.getFormValue('storCpuCores', 'number', 32),
+            storMemory: Utils.getFormValue('storMemory', 'number', 128),
+            storSsdCount: Utils.getFormValue('storSsdCount', 'number', 2),
+            storSsdSpec: Utils.getFormValue('storSsdSpec', 'string', '1.92TB'),
+            storOsdReservedSize: Utils.getFormValue('storOsdReservedSize', 'number', 0),
+            storHddCount: Utils.getFormValue('storHddCount', 'number', 4),
+            storHddSpec: Utils.getFormValue('storHddSpec', 'string', '8TB'),
 
             // IP地址范围
             mngIpRange: Utils.getFormValue('mngIpRange', 'string'),
@@ -611,6 +510,8 @@ const App = {
      * 初始化应用
      */
     init() {
+        console.log('App.init() 开始执行');
+        
         // 初始化DOM元素
         Elements.init();
 
@@ -619,6 +520,7 @@ const App = {
 
         // 延迟再次初始化，确保所有元素都被处理
         setTimeout(() => {
+            console.log('App.init() setTimeout 回调执行');
             this.initCustomSelects();
             // 在自定义下拉框完全初始化后再执行条件禁用逻辑
             this.initConditionalDisabling();
@@ -633,6 +535,7 @@ const App = {
         // 绑定事件监听器
         this.bindEvents();
 
+        console.log('App.init() 执行完成');
         // 渲染进程应用初始化完成
     },
 
@@ -867,6 +770,7 @@ const App = {
      * 初始化条件禁用逻辑
      */
     initConditionalDisabling() {
+        console.log('[DEBUG] initConditionalDisabling called');
         // 监听管理/业务网合设选择变化
         const mngBizMergedSelect = document.getElementById('isNetCombined');
         if (mngBizMergedSelect) {
@@ -911,8 +815,12 @@ const App = {
      * 处理计算/存储合设选择变化
      */
     handleComputeStorageMergedChange() {
+        console.log('[DEBUG] handleComputeStorageMergedChange called');
         const computeStorageMergedSelect = document.getElementById('isFusionNode');
         const mngAsFusionSelect = document.getElementById('isMngAsFusion');
+        
+        console.log('[DEBUG] computeStorageMergedSelect:', computeStorageMergedSelect);
+        console.log('[DEBUG] mngAsFusionSelect:', mngAsFusionSelect);
         
         if (computeStorageMergedSelect && mngAsFusionSelect) {
             const isFusionNode = computeStorageMergedSelect.value === 'true';
@@ -1318,7 +1226,17 @@ const DesktopVmManager = {
 window.DesktopVmManager = DesktopVmManager;
 
 // --- 应用启动 ---
+console.log('renderer.js文件开始加载...');
+// 通过electronAPI向主进程发送日志
+if (window.electronAPI) {
+    console.log('electronAPI可用，向主进程发送日志');
+} else {
+    console.log('electronAPI不可用');
+}
+console.log('renderer.js 文件已加载');
+
 window.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded 事件触发');
     App.init();
     DesktopVmManager.init();
 });

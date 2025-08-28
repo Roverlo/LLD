@@ -30,7 +30,7 @@ export const ParamCollector = {
     collect() {
         const isFusion = Utils.getFormValue('isFusionNode', 'boolean');
 
-        return {
+        const params = {
             // 基础配置
             isNetCombined: Utils.getFormValue('isNetCombined', 'boolean'),
             isDualNode: Utils.getFormValue('isDualNode', 'boolean'),
@@ -72,10 +72,10 @@ export const ParamCollector = {
 
             // 管理服务器存储配置
             mngSsdCount: Utils.getFormValue('mngSsdCount', 'number', 2),
-            mngSsdSpec: Utils.getFormValue('mgmtSsdSpec', 'text', '1.92'),
+            mngSsdSpec: Utils.getFormValue('mgmtSsdSpec', 'string', '1.92'),
             mngOsdReservedSize: Utils.getFormValue('mgmtOsdReservedSize', 'number', 0),
             mngHddCount: Utils.getFormValue('mngHddCount', 'number', 4),
-            mngHddSpec: Utils.getFormValue('mgmtHddSpec', 'text', '8'),
+            mngHddSpec: Utils.getFormValue('mgmtHddSpec', 'string', '8'),
 
             // 超融合服务器存储配置
             fusionSsdCount: Utils.getFormValue('fusionSsdCount', 'number', DEFAULT_SSD_COUNT),
@@ -170,10 +170,13 @@ export const ParamCollector = {
         console.log('=== 参数收集调试信息 ===');
         console.log('管理服务器CPU核数:', params.mngCpuCores);
         console.log('管理服务器内存:', params.mngMemory);
+        console.log('超融合服务器CPU核数:', params.fusionCpuCores);
+        console.log('超融合服务器内存:', params.fusionMemory);
+        console.log('存储服务器CPU核数:', params.storCpuCores);
+        console.log('存储服务器内存:', params.storMemory);
         console.log('管理服务器SSD规格:', params.mngSsdSpec);
         console.log('管理服务器OSD预留:', params.mngOsdReservedSize);
         console.log('管理服务器HDD规格:', params.mngHddSpec);
-        console.log('完整参数对象:', JSON.stringify(params, null, 2));
         console.log('=== 参数收集调试信息结束 ===');
 
         return params;

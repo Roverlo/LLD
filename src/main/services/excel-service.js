@@ -420,17 +420,17 @@ const createServerPerformanceWorksheet = (workbook, servers, params) => {
         cpuCores: safeParams.mngCpuCores || 32,
         memory: safeParams.mngMemory || 128,
         ssd: safeParams.mngSsdCount || 2,
-        ssdSpec: safeParams.mngSsdSpec || '1.92',
+        ssdSpec: safeParams.mgmtSsdSpec || '1.92',
         hdd: safeParams.mngHddCount || 4,
-        hddSpec: safeParams.mngHddSpec || '8',
+        hddSpec: safeParams.mgmtHddSpec || '8',
     };
     const compConfig = {
-        cpuCores: safeParams.isFusionNode ? (safeParams.fusionCpuCores || 64) : (safeParams.calcCpuCores || 64),
-        memory: safeParams.isFusionNode ? (safeParams.fusionMemory || 256) : (safeParams.calcMemory || 256),
-        ssd: safeParams.isFusionNode ? (safeParams.fusionSsdCount || 2) : (safeParams.calcSsdCount || 2),
-        ssdSpec: safeParams.isFusionNode ? (safeParams.fusionSsdSpec || '1.92') : (safeParams.calcSsdSpec || '1.92'),
-        hdd: safeParams.isFusionNode ? (safeParams.fusionHddCount || 4) : (safeParams.calcHddCount || 4),
-        hddSpec: safeParams.isFusionNode ? (safeParams.fusionHddSpec || '8') : (safeParams.calcHddSpec || '8'),
+        cpuCores: safeParams.fusionCpuCores || 64,
+        memory: safeParams.fusionMemory || 256,
+        ssd: safeParams.fusionSsdCount || 2,
+        ssdSpec: safeParams.fusionSsdSpec || '1.92',
+        hdd: safeParams.fusionHddCount || 4,
+        hddSpec: safeParams.fusionHddSpec || '8',
     };
     const storConfig = {
         cpuCores: safeParams.storCpuCores || 32,
@@ -782,20 +782,88 @@ const createStorageWorksheet = (workbook, params) => {
         countStor = 0,
         isCephDual = false,
         storageSecurity = 'replica',
-        ssdCount = 0,
-        ssdSpec = '1TB',
-        hddCount = 0,
-        hddSpec = '2TB',
-        cpuCores = 32,
-        memorySize = 128,
-        osdReservedSize = 0,
+        // 管理服务器配置
+        mngSsdCount = 0,
+        mgmtSsdSpec = '1TB',
+        mngHddCount = 0,
+        mgmtHddSpec = '2TB',
+        mngCpuCores = 32,
+        mngMemory = 128,
+        mgmtOsdReservedSize = 0,
+        // 超融合/计算服务器配置
+        fusionSsdCount = 0,
+        fusionSsdSpec = '1TB',
+        fusionHddCount = 0,
+        fusionHddSpec = '2TB',
+        fusionCpuCores = 64,
+        fusionMemory = 256,
+        fusionOsdReservedSize = 0,
+        // 存储服务器配置
+        storSsdCount = 0,
+        storSsdSpec = '1TB',
+        storHddCount = 0,
+        storHddSpec = '2TB',
+        storCpuCores = 32,
+        storMemory = 128,
+        storOsdReservedSize = 0,
     } = params || {};
+
+    console.log('=== createStorageWorksheet DEBUG ===');
+    console.log('管理服务器配置:', { mngSsdCount, mgmtSsdSpec, mngHddCount, mgmtHddSpec, mngCpuCores, mngMemory, mgmtOsdReservedSize });
+    console.log('超融合服务器配置:', { fusionSsdCount, fusionSsdSpec, fusionHddCount, fusionHddSpec, fusionCpuCores, fusionMemory, fusionOsdReservedSize });
+    console.log('存储服务器配置:', { storSsdCount, storSsdSpec, storHddCount, storHddSpec, storCpuCores, storMemory, storOsdReservedSize });
+    console.log('======================================');
 
     let currentRow = 1;
 
     // 写入存储表格的函数
-    const writeStorageTable = (title, serverCount, includeFuncVm, includeDesktop) => {
+    const writeStorageTable = (title, serverCount, includeFuncVm, includeDesktop, serverType = 'storage') => {
         const startRow = currentRow;
+
+        // 根据服务器类型选择配置参数
+        let ssdCount, ssdSpec, hddCount, hddSpec, cpuCores, memorySize, osdReservedSize;
+        
+        if (title.includes('MNG') || serverType === 'management') {
+            // 管理服务器配置
+            ssdCount = mngSsdCount;
+            ssdSpec = mgmtSsdSpec;
+            hddCount = mngHddCount;
+            hddSpec = mgmtHddSpec;
+            cpuCores = mngCpuCores;
+            memorySize = mngMemory;
+            osdReservedSize = mgmtOsdReservedSize;
+        } else if (serverType === 'fusion') {
+            // 超融合服务器配置
+            ssdCount = fusionSsdCount;
+            ssdSpec = fusionSsdSpec;
+            hddCount = fusionHddCount;
+            hddSpec = fusionHddSpec;
+            cpuCores = fusionCpuCores;
+            memorySize = fusionMemory;
+            osdReservedSize = fusionOsdReservedSize;
+        } else if (serverType === 'storage') {
+            // 存储服务器配置
+            ssdCount = storSsdCount;
+            ssdSpec = storSsdSpec;
+            hddCount = storHddCount;
+            hddSpec = storHddSpec;
+            cpuCores = storCpuCores;
+            memorySize = storMemory;
+            osdReservedSize = storOsdReservedSize;
+        } else {
+            // 默认使用存储服务器配置（向后兼容）
+            ssdCount = storSsdCount;
+            ssdSpec = storSsdSpec;
+            hddCount = storHddCount;
+            hddSpec = storHddSpec;
+            cpuCores = storCpuCores;
+            memorySize = storMemory;
+            osdReservedSize = storOsdReservedSize;
+        }
+
+        console.log(`=== writeStorageTable ${title} ===`);
+        console.log('使用的配置:', { ssdCount, ssdSpec, hddCount, hddSpec, cpuCores, memorySize, osdReservedSize });
+        console.log('===============================');
 
         // 计算缓存比
         // 解析SSD和HDD规格（去掉TB后缀）
@@ -950,11 +1018,12 @@ const createStorageWorksheet = (workbook, params) => {
     if (!isFusionNode || (isFusionNode && !isMngAsFusion)) {
         // 单一集群模式
         const serverCount = isFusionNode ? countFusion : countStor;
-        writeStorageTable('CEPH集群01', serverCount, true, true);
+        const serverType = isFusionNode ? 'fusion' : 'storage';
+        writeStorageTable('CEPH集群01', serverCount, true, true, serverType);
     } else if (isFusionNode && isMngAsFusion) {
         // 分离模式：管理集群 + 计算集群
-        currentRow = writeStorageTable('CEPH_MNG', countMng, true, false);
-        writeStorageTable('CEPH集群01', countFusion, false, true);
+        currentRow = writeStorageTable('CEPH_MNG', countMng, true, false, 'management');
+        writeStorageTable('CEPH集群01', countFusion, false, true, 'fusion');
     }
 
     return worksheet;
