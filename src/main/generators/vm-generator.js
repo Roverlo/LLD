@@ -647,19 +647,45 @@ const generateDownloadVms = (params, ipManager) => {
         return vms;
     }
 
-    const isCluster = downloadType === '集群';
-    const vmCount = isCluster ? 2 : 1;
-
-    for (let i = 1; i <= vmCount; i++) {
-        const name = `下载服务器${i.toString().padStart(2, '0')}`;
+    const isCluster = downloadType === '集群部署';
+    
+    if (isCluster) {
+        // 集群部署：生成Download01、Download02、Download03和Download浮动IP
+        for (let i = 1; i <= 3; i++) {
+            const name = `Download${i.toString().padStart(2, '0')}`;
+            const downloadVm = createVmObject(
+                name,
+                '下载服务器虚机',
+                '软件下载服务',
+                ipManager.getNextIp('management', 'vm'),
+                isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business', 'vm'),
+                NOT_APPLICABLE_TEXT,
+                '4C16G500G'
+            );
+            vms.push(downloadVm);
+        }
+        
+        // 生成Download浮动IP
+        const floatingVm = createVmObject(
+            'Download浮动',
+            '下载服务器虚机',
+            '软件下载服务浮动IP',
+            ipManager.getNextIp('management', 'vm'),
+            isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business', 'vm'),
+            NOT_APPLICABLE_TEXT,
+            NOT_APPLICABLE_TEXT
+        );
+        vms.push(floatingVm);
+    } else {
+        // 单机部署：只生成Download01
         const downloadVm = createVmObject(
-            name,
+            'Download01',
             '下载服务器虚机',
             '软件下载服务',
             ipManager.getNextIp('management', 'vm'),
             isNetCombined ? NOT_APPLICABLE_TEXT : ipManager.getNextIp('business', 'vm'),
             NOT_APPLICABLE_TEXT,
-            '4C8G500G'
+            '4C16G500G'
         );
         vms.push(downloadVm);
     }

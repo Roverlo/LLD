@@ -95,8 +95,8 @@ const calculateIpRequirements = (params) => {
 
     if (isZXOPS) vmCount += 1;
     if (deployDEM) vmCount += 1;
-    if (downloadType === '集群') vmCount += 2;
-    else if (downloadType === '单机') vmCount += 1;
+    if (downloadType === '集群部署') vmCount += 2;
+    else if (downloadType === '单机部署') vmCount += 1;
 
     const vmRequirements = {
         management: vmCount,
